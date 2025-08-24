@@ -1,0 +1,8 @@
+[build]
+package = "biscuit"
+version = "0.1.0"
+lang = "C11"
+
+[dependencies]
+CSFML = { path="libs/CSFML" }
+

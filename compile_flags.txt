@@ -1,0 +1,11 @@
+-Wall
+-Wextra
+-Wshadow
+-Wconversion
+-Wfloat-equal
+-Wno-unused-const-variable
+-Wno-sign-conversion
+-std=c11
+-DDEBUG
+-Isrc
+-Ilibs/CSFML/include
