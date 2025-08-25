@@ -26,6 +26,10 @@ int main() {
             case sfEvtClosed:
                 sfRenderWindow_close(window);
                 break;
+            case sfEvtKeyPressed: 
+                if (sfKeyboard_isKeyPressed(sfKeyEscape))
+                    sfRenderWindow_close(window);
+                break;
             default:
                 break;
             }
