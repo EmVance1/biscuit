@@ -1,5 +1,6 @@
 #include "SFML/System/Time.h"
 #include <SFML/Graphics.h>
+#include "clock.h"
 #include <stdio.h>
 
 
@@ -15,10 +16,10 @@
 
 int main() {
     sfRenderWindow* window = sfRenderWindow_create(VIDEO_MODE, "Biscuit", SCREEN_MODE, NULL);
-    sfClock* clock = sfClock_create();
+    Clock_init();
 
     while (sfRenderWindow_isOpen(window)) {
-        const float deltatime = sfTime_asSeconds(sfClock_restart(clock));
+        Clock_setFrame();
 
         sfEvent event;
         while (sfWindow_pollEvent((sfWindow*)window, &event)) {
