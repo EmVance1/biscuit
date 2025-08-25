@@ -1,5 +1,5 @@
 #include "generate.h"
-#include <cstring>
+#include <string.h>
 #include <stdlib.h>
 
 
@@ -80,8 +80,8 @@ void waveFunctionCollapse(int32_t* board, sfVector2u boardsize, const AdjacencyR
                             if (neighbor < 0) {
                                 continue;
                             } else {
-                                set = Set_intersection(set, rules(v, neighbor));
-                                // set = Set_intersection(set, rules[neighbor]);
+                                // set = Set_intersection(set, rules(v, neighbor));
+                                set = Set_intersection(set, rules[neighbor]);
                             }
                         }
                     }

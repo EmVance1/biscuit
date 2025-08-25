@@ -5,5 +5,4 @@ lang = "C11"
 
 [dependencies]
 CSFML = { path="libs/CSFML" }
-FastNoise2 = { path="libs/FastNoise2" }
 

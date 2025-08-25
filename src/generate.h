@@ -1,6 +1,7 @@
 #ifndef GENERATE_H
 #define GENERATE_H
 #include <SFML/Graphics.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 

@@ -30,8 +30,8 @@ bool rectLineCollision(sfFloatRect rect, sfVector2f v0, sfVector2f v1) {
 
 sfVector2f resolveRectLineCollision(sfFloatRect rect, sfVector2f* v, int lines) {
     // collect distance to offset from rect and line
-    float lineOffsets[lines];
-    sfVector2f offsetDir[lines];
+    float* lineOffsets = (float*)calloc(lines, sizeof(float));
+    sfVector2f* offsetDir = (sfVector2f*)calloc(lines, sizeof(sfVector2f));
     for (int i=0; i<lines; i++) {
         sfVector2f v0 = v[2*i+0];
         sfVector2f v1 = v[2*i+1];
@@ -47,7 +47,6 @@ sfVector2f resolveRectLineCollision(sfFloatRect rect, sfVector2f* v, int lines) 
             offsetDir[i] = v0.y < v1.y ? left : right;
         }
     }
-    
     if (lines == 0) return (sfVector2f) {0,0};
 
     // find min offset
@@ -62,12 +61,15 @@ sfVector2f resolveRectLineCollision(sfFloatRect rect, sfVector2f* v, int lines) 
         }
     }
 
+    free(lineOffsets);
+    free(offsetDir);
+
     return offsetVector;
 }
 
 bool handlePlayerWallCollision(Entity* player, sfVector2f* vertices, int numVertices) {
     sfFloatRect rectBound = player->rectBound;
-    sfVector2f* collisionVertices = malloc(sizeof(sfVector2f)* numVertices *2);
+    sfVector2f* collisionVertices = (sfVector2f*)malloc(sizeof(sfVector2f)* numVertices *2);
     int lines = 0;
     for (int i=0; i<numVertices-1; i++) {
         sfVector2f v0 = vertices[i];
