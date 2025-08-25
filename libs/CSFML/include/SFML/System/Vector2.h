@@ -32,6 +32,26 @@
 
 
 ////////////////////////////////////////////////////////////
+/// \brief 2-component vector of floats
+///
+////////////////////////////////////////////////////////////
+typedef struct
+{
+    float x;
+    float y;
+} sfVector2f;
+
+sfVector2f sfVec2f_add(sfVector2f a, sfVector2f b);
+sfVector2f sfVec2f_sub(sfVector2f a, sfVector2f b);
+sfVector2f sfVec2f_scale(sfVector2f a, float b);
+float sfVec2f_dot(sfVector2f a, sfVector2f b);
+float sfVec2f_len(sfVector2f v);
+sfVector2f sfVec2f_norm(sfVector2f v);
+sfVector2f sfVec2f_compDiv(sfVector2f a, sfVector2f b);
+sfVector2f sfVec2f_compMul(sfVector2f a, sfVector2f b);
+
+
+////////////////////////////////////////////////////////////
 /// \brief 2-component vector of integers
 ///
 ////////////////////////////////////////////////////////////
@@ -40,6 +60,16 @@ typedef struct
     int x;
     int y;
 } sfVector2i;
+
+sfVector2i sfVec2i_add(sfVector2i a, sfVector2i b);
+sfVector2i sfVec2i_sub(sfVector2i a, sfVector2i b);
+sfVector2f sfVec2i_scale(sfVector2i a, float b);
+int   sfVec2i_dot(sfVector2i a, sfVector2i b);
+float sfVec2i_len(sfVector2i v);
+sfVector2f sfVec2i_norm(sfVector2i v);
+sfVector2f sfVec2i_compDiv(sfVector2i a, sfVector2i b);
+sfVector2i sfVec2i_compDivFloor(sfVector2i a, sfVector2i b);
+sfVector2i sfVec2i_compMul(sfVector2i a, sfVector2i b);
 
 
 ////////////////////////////////////////////////////////////
@@ -52,16 +82,15 @@ typedef struct
     unsigned int y;
 } sfVector2u;
 
-
-////////////////////////////////////////////////////////////
-/// \brief 2-component vector of floats
-///
-////////////////////////////////////////////////////////////
-typedef struct
-{
-    float x;
-    float y;
-} sfVector2f;
+sfVector2u sfVec2u_add(sfVector2u a, sfVector2u b);
+sfVector2u sfVec2u_sub(sfVector2u a, sfVector2u b);
+sfVector2f sfVec2u_scale(sfVector2u a, float b);
+int   sfVec2u_dot(sfVector2u a, sfVector2u b);
+float sfVec2u_len(sfVector2u v);
+sfVector2f sfVec2u_norm(sfVector2u v);
+sfVector2f sfVec2u_compDiv(sfVector2u a, sfVector2u b);
+sfVector2u sfVec2u_compDivFloor(sfVector2u a, sfVector2u b);
+sfVector2u sfVec2u_compMul(sfVector2u a, sfVector2u b);
 
 
 #endif // SFML_VECTOR2_H

@@ -6,6 +6,7 @@
 -Wno-unused-const-variable
 -Wno-sign-conversion
 -std=c11
--DDEBUG
+-DVANGO_DEBUG
 -Isrc
 -Ilibs/CSFML/include
+-Ilibs/FastNoise2/include

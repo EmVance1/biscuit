@@ -1,3 +1,4 @@
+#include "SFML/System/Time.h"
 #include <SFML/Graphics.h>
 #include <stdio.h>
 
@@ -14,8 +15,11 @@
 
 int main() {
     sfRenderWindow* window = sfRenderWindow_create(VIDEO_MODE, "Biscuit", SCREEN_MODE, NULL);
+    sfClock* clock = sfClock_create();
 
     while (sfRenderWindow_isOpen(window)) {
+        const float deltatime = sfTime_asSeconds(sfClock_restart(clock));
+
         sfEvent event;
         while (sfWindow_pollEvent((sfWindow*)window, &event)) {
             switch (event.type) {
