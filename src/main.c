@@ -1,4 +1,3 @@
-#include "SFML/System/Time.h"
 #include <SFML/Graphics.h>
 #include "clock.h"
 #include <stdio.h>
@@ -27,7 +26,7 @@ int main() {
             case sfEvtClosed:
                 sfRenderWindow_close(window);
                 break;
-            case sfEvtKeyPressed: 
+            case sfEvtKeyPressed:
                 if (sfKeyboard_isKeyPressed(sfKeyEscape))
                     sfRenderWindow_close(window);
                 break;
