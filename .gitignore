@@ -1,4 +1,5 @@
 bin/
 recipes/
 libs/CSFML/vango.toml
+compile_flags.txt
 
