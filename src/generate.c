@@ -113,6 +113,7 @@ void waveFunctionCollapse(int32_t* board, sfVector2u boardsize, const AdjacencyR
         }
 
         // collapse smallest set
+        bool choices[64] = { 0 };
         board[min_y * boardsize.x + min_x] = min;
     }
 }

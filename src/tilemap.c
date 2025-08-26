@@ -28,6 +28,11 @@ sfuTileMap* sfuTileMap_createFromIndices(const sfuTextureAtlas* atlas, const uin
         map->quads[i].vertices[1].texCoords = (sfVector2f){ (float)texture.left + (float)texture.width, (float)texture.top };
         map->quads[i].vertices[2].texCoords = (sfVector2f){ (float)texture.left + (float)texture.width, (float)texture.top + (float)texture.height };
         map->quads[i].vertices[3].texCoords = (sfVector2f){ (float)texture.left, (float)texture.top + (float)texture.height };
+
+        map->quads[i].vertices[0].color = (sfColor){ .r=255, .g=255, .b=255, .a=255 };
+        map->quads[i].vertices[1].color = (sfColor){ .r=255, .g=255, .b=255, .a=255 };
+        map->quads[i].vertices[2].color = (sfColor){ .r=255, .g=255, .b=255, .a=255 };
+        map->quads[i].vertices[3].color = (sfColor){ .r=255, .g=255, .b=255, .a=255 };
     }
 
     return map;

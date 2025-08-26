@@ -8,7 +8,7 @@
 // typedef struct AdjacencyRule {
 //     uint64_t rules[8];
 // } AdjacencyRule;
-//
+
 typedef uint64_t AdjacencyRule;
 
 AdjacencyRule AdjacencyRule_create(size_t* indices, size_t count);
