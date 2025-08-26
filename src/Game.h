@@ -2,7 +2,7 @@
 #define GAME_H
 #include "SFML/Graphics.h"
 
-void processKeyClicked(sfEvent event);
+void processKeyClicked();
 
 void GameInit();
 

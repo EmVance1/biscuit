@@ -1,25 +1,29 @@
 #include "Entity.h"
-#include "SFML/System/Clock.h"
-#include "SFML/System/Time.h"
-#include "SFML/System/Vector2.h"
 #include "clock.h"
+#include <math.h>
+#include <stdio.h>
 
 
+// Does not account for delta time
 void moveEntity(Entity* entity, sfVector2f dir) {
-    sfVector2f offset = sfVec2f_scale(dir,Clock_deltaTime());
+    sfVector2f offset = dir;
     entity->position = sfVec2f_add(entity->position, offset);
     entity->rectBound.left += offset.x;
     entity->rectBound.top += offset.y;
 }
 
-void addVelocity(Entity* entity, sfVector2f velocity) {
-    entity->velocity = sfVec2f_add(entity->velocity,velocity);
-    
-    // clamp velocity to not exceed entity speed limit
-    float speed = sfVec2f_len(entity->velocity);
-    if (speed > entity->speed) {
-        sfVector2f newVel = sfVec2f_norm(entity->velocity);
-        newVel = sfVec2f_scale(newVel, entity->speed);
+void addVelocity(Entity* entity, sfVector2f acceleration) {  
+    float prevSpeed = sfVec2f_len(entity->velocity);
+    entity->velocity = sfVec2f_add(entity->velocity,acceleration);
+
+    if (sfVec2f_len(entity->velocity) > entity->speed) {
+        // moved from slower into greater than max speed
+        if (prevSpeed < entity->speed) {
+            entity->velocity = sfVec2f_scale(entity->velocity,entity->speed/sfVec2f_len(entity->velocity));
+        // was already above max speed, alter direction and keep speed (because of dash)
+        } else {
+            entity->velocity = sfVec2f_scale(entity->velocity,prevSpeed/sfVec2f_len(entity->velocity));
+        }
     }
 }
 
