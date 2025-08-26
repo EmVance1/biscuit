@@ -1,9 +1,10 @@
 #include "tilemap.h"
-#include "SFML/Graphics/Transformable.h"
-#include "atlas.h"
+#include <SFML/Graphics.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <SFML/Graphics.h>
+#include "atlas.h"
+
+#include <stdio.h>
 
 
 sfuTileMap* sfuTileMap_createFromIndices(const sfuTextureAtlas* atlas, const uint32_t* indices, sfVector2u dimensions) {
@@ -11,6 +12,8 @@ sfuTileMap* sfuTileMap_createFromIndices(const sfuTextureAtlas* atlas, const uin
     sfuTileMap* map = (sfuTileMap*)malloc(sizeof(sfuTileMap) + count * sizeof(sfuQuad));
     if (!map) { return NULL; }
 
+    map->atlas = atlas;
+    map->transform = sfTransformable_create();
     map->dimensions = dimensions;
     for (size_t i = 0; i < count; i++) {
         const sfVector2u index = (sfVector2u){ (uint32_t)i % dimensions.x, (uint32_t)i / dimensions.x };

@@ -4,5 +4,6 @@ version = "0.1.0"
 lang = "C11"
 
 [dependencies]
-CSFML = { path="libs/CSFML" }
+CSFML   = { path="libs/CSFML" }
+NavMesh = { path="libs/NavMesh" }
 

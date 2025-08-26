@@ -5,7 +5,10 @@
 #include <stdint.h>
 
 
-typedef uint64_t AdjacencyRule;
+typedef struct AdjacencyRule {
+    
+    uint64_t rules[8];
+} AdjacencyRule;
 
 AdjacencyRule AdjacencyRule_create(size_t* indices, size_t count);
 bool AdjacencyRule_permits(AdjacencyRule self, size_t value);
