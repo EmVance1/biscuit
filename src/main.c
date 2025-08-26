@@ -25,7 +25,10 @@ int main() {
         sfView_setViewport(camera, (sfFloatRect){ 0.5f * (1.f - ratio), 0.f, ratio, 1.f });
     }
 
+    
+
     while (sfRenderWindow_isOpen(window)) {
+        sfRenderWindow_clear(window, (sfColor){ 255, 255, 255, 255 });
         Clock_setFrame();
 
         sfEvent event;
@@ -44,8 +47,12 @@ int main() {
             }
         }
 
+        GameUpdate();
+
         sfRenderWindow_setView(window, camera);
-        sfRenderWindow_clear(window, (sfColor){ 255, 0, 255, 255 });
+
+        GameRender(window);
+
         sfRenderWindow_display(window);
     }
 
