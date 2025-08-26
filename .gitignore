@@ -1,5 +1,6 @@
 bin/
 recipes/
 libs/CSFML/vango.toml
+libs/NavMesh/bin/
 .clangd
 compile_flags.txt
