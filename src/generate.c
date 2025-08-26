@@ -55,6 +55,7 @@ static int32_t getBoard(int32_t* board, sfVector2u size, sfVector2i pos) {
     }
     return board[pos.y * size.x + pos.x];
 }
+
 static void setBoard(int32_t* board, sfVector2u size, sfVector2i pos, int32_t value) {
     if ((pos.x < 0 || pos.x >= size.x) || (pos.y < 0 || pos.y >= size.y)) {
         return;
