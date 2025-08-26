@@ -1,10 +1,10 @@
 #include <SFML/Graphics.h>
+#include "Game.h"
 #include "atlas.h"
 #include "clock.h"
 #include "tilemap.h"
 
 #include <navmesh/c/lib.h>
-
 
 #ifdef VANGO_DEBUG
     #define SCREEN_MODE sfDefaultStyle
@@ -59,14 +59,20 @@ int main() {
             case sfEvtKeyPressed:
                 if (sfKeyboard_isKeyPressed(sfKeyEscape))
                     sfRenderWindow_close(window);
+                processKeyClicked(event);
                 break;
             default:
                 break;
             }
         }
 
-        sfRenderWindow_setView(window, camera);
+        GameUpdate();
+
         sfRenderWindow_clear(window, (sfColor){ 0, 0, 0, 255 });
+        sfRenderWindow_setView(window, camera);
+
+        GameRender(window);
+
         sfRenderWindow_drawTileMap(window, sandbox, NULL);
         sfRenderWindow_display(window);
     }
