@@ -1,4 +1,5 @@
 #include <SFML/Graphics.h>
+#include "Game.h"
 #include "clock.h"
 #include <stdio.h>
 
@@ -29,6 +30,7 @@ int main() {
             case sfEvtKeyPressed:
                 if (sfKeyboard_isKeyPressed(sfKeyEscape))
                     sfRenderWindow_close(window);
+                processKeyClicked(event);
                 break;
             default:
                 break;
