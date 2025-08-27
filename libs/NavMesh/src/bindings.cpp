@@ -60,6 +60,7 @@ struct navMesh { nav::Mesh impl; };
 
 navMesh* navMesh_createFromFile(const char* filename, float scale) {
     navMesh* result = (navMesh*)malloc(sizeof(navMesh));
+    if (!result) { return NULL; }
     result->impl = nav::Mesh::read_file(filename, scale);
     return result;
 }
@@ -83,7 +84,9 @@ size_t navMesh_getTriangleIndex(const navMesh* self, navVector2f p, float error)
 
 navPath* navMesh_findPath(const navMesh* self, navVector2f begin, navVector2f end) {
     const auto path = self->impl.pathfind(fromc(begin), fromc(end));
+    if (path.empty()) { return NULL; }
     navPath* result = (navPath*)malloc(sizeof(navPath) + path.size() * sizeof(navVector2f));
+    if (!result) { return NULL; }
     result->count = path.size();
     for (size_t i = 0; i < path.size(); i++) {
         result->points[i] = intoc(path[i]);
@@ -102,6 +105,7 @@ navMesh* navMesh_createFromGrid(
         float epsilon)
 {
     navMesh* result = (navMesh*)malloc(sizeof(navMesh));
+    if (!result) { return NULL; }
     result->impl = nav::generate_delauney(grid, width, height, stride, index, (nav::Method)method, epsilon);
     return result;
 }
