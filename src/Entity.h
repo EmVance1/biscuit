@@ -13,6 +13,9 @@ typedef struct Entity {
     sfVector2f velocity;
     sfVector2f lastDir;
     sfFloatRect rectBound;
+
+    sfColor fillCol;
+
     float speed;
     float acc;
     float dashSpeed;
@@ -25,6 +28,7 @@ typedef struct Entity {
     Cooldown dashCooldown;
     Cooldown attackCooldown;
     Cooldown attackAnim;
+    Cooldown damageAnim;
     
     float attackStartAngle;
 } Entity;
@@ -45,14 +49,16 @@ void Entity_damage(Entity* entity, float damage);
 
 void Entity_kill(Entity* entity);
 
-Cooldown cooldownDefault();
+void Entity_render(sfRenderWindow* window, Entity* entity);
 
-void cooldownSet(Cooldown cd, float time);
+Cooldown Cooldown_Default();
 
-void cooldownRestart(Cooldown cd);
+void Cooldown_Set(Cooldown cd, float time);
+
+void Cooldown_Reset(Cooldown cd);
 
 // Returns remaining time on cooldown in seconds
-float cooldownGet(Cooldown cd);
+float Cooldown_Get(Cooldown cd);
 
-Cooldown cooldownCreate(float time);
+Cooldown Cooldown_Create(float time);
 #endif

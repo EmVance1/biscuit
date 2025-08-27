@@ -59,6 +59,7 @@ void Entity_startDash(Entity* entity) {
 
 void Entity_damage(Entity* entity, float damage) {
     entity->health -= damage;
+    Cooldown_Reset(entity->damageAnim);
     if (entity->health <= 0) Entity_kill(entity);
 }
 
@@ -71,23 +72,40 @@ void Entity_updateVelocity(Entity* entity) {
     Entity_setVelocity(entity, oppositeVel);
 }
 
-Cooldown cooldownDefault() {
+void Entity_render(sfRenderWindow* window, Entity *entity) {
+    sfRectangleShape* rect = sfRectangleShape_create();
+    sfRenderStates renderState = sfRenderStates_default();
+    sfRectangleShape_setPosition(rect, (sfVector2f) {entity->rectBound.left, entity->rectBound.top});
+    sfRectangleShape_setSize(rect, (sfVector2f) {entity->rectBound.width, entity->rectBound.height});
+
+    if (entity->health <= 0) {
+       return; 
+    } else if (Cooldown_Get(entity->damageAnim) > 0) {
+        sfRectangleShape_setFillColor(rect, sfRed);
+    } else {
+        sfRectangleShape_setFillColor(rect, entity->fillCol);
+    }
+
+    sfRenderWindow_drawRectangleShape(window, rect, &renderState);
+}
+
+Cooldown Cooldown_Default() {
     return (Cooldown) {sfClock_create(), 1.0f};
 }
 
-float cooldownGet(Cooldown cd) {
+float Cooldown_Get(Cooldown cd) {
     return cd.cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cd.clock));
 }
 
-void cooldownSet(Cooldown cd, float time) {
+void Cooldown_Set(Cooldown cd, float time) {
     cd.cooldownLength = time;
     sfClock_restart(cd.clock);
 }
 
-void cooldownRestart(Cooldown cd) {
+void Cooldown_Reset(Cooldown cd) {
     sfClock_restart(cd.clock);
 }
 
-Cooldown cooldownCreate(float time) {
+Cooldown Cooldown_Create(float time) {
     return (Cooldown) {sfClock_create(), time};
 }

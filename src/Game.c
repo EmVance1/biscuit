@@ -18,52 +18,58 @@ static void processKeyClicked();
 
 void Game_Init() {
     player = (Entity) {
-        (sfVector2f) {4*16,4*16}, // position
-        (sfVector2f) {0,0}, // velocity
-        (sfVector2f) {1,0}, // lastDir
-        (sfFloatRect) {4*16-5,4*16-5,10,10}, // rectBound
-        90.0f, // speed
-        10000.0f, // acc(eleration)
-        600.0f, // dashSpeed
-        100, // health
-        20.0f, // meleeRange
-        40.0f, // meleeDamage
-        .dashCooldown = cooldownCreate(0.5f), // dashCooldown
-        .attackCooldown = cooldownCreate(0.3f), // attackCooldown
-        .attackAnim = cooldownCreate(0.2f),
+        .position = (sfVector2f) {4*16,4*16},
+        .velocity = (sfVector2f) {0,0},
+        .lastDir = (sfVector2f) {1,0},
+        .rectBound = (sfFloatRect) {4*16-5,4*16-5,10,10},
+        .fillCol = sfBlue,
+        .speed = 90.0f,
+        .acc = 10000.0f,
+        .dashSpeed = 600.0f,
+        .health = 100,
+        .meleeRange = 25.0f,
+        .meleeDamage = 40.0f,
+        .dashCooldown = Cooldown_Create(0.5f),
+        .attackCooldown = Cooldown_Create(0.3f),
+        .attackAnim = Cooldown_Create(0.2f),
+        .damageAnim = Cooldown_Create(0.05f),
     };
 
     numEnemies = 2;
     enemies = (Entity*) malloc(sizeof(Entity)*numEnemies);
     enemies[0] = (Entity) {
-        (sfVector2f) {6*15,3*16}, // position
-        (sfVector2f) {0,0}, // velocity
-        (sfVector2f) {1,0}, // lastDir
-        (sfFloatRect) {6*16-5,3*16-5,10,10}, // rectBound
-        90.0f, // speed
-        10000.0f, // acc(eleration)
-        600.0f, // dashSpeed
-        100, // health
-        70.0f, // meleeRange
-        20.0f, // meleeDamage
-        .dashCooldown = cooldownCreate(0.5f), // dashCooldown
-        .attackCooldown = cooldownCreate(1.0f), // attackCooldown
-        .attackAnim = cooldownCreate(0.2f),
+        .position = (sfVector2f) {6*15,3*16},
+        .velocity = (sfVector2f) {0,0},
+        .lastDir = (sfVector2f) {1,0},
+        .rectBound = (sfFloatRect) {6*16-5,3*16-5,10,10},
+        .fillCol = sfColor_fromRGBA(255,165,0,255),
+        .speed = 90.0f,
+        .acc = 10000.0f,
+        .dashSpeed = 600.0f,
+        .health = 100,
+        .meleeRange = 70.0f,
+        .meleeDamage = 20.0f,
+        .dashCooldown = Cooldown_Create(0.5f),
+        .attackCooldown = Cooldown_Create(1.0f),
+        .attackAnim = Cooldown_Create(0.2f),
+        .damageAnim = Cooldown_Create(0.05f),
     };
     enemies[1] = (Entity) {
-        (sfVector2f) {4*16,7*16}, // position
-        (sfVector2f) {0,0}, // velocity
-        (sfVector2f) {1,0}, // lastDir
-        (sfFloatRect) {4*16-5,7*16-5,10,10}, // rectBound
-        90.0f, // speed
-        10000.0f, // acc(eleration)
-        600.0f, // dashSpeed
-        100, // health
-        70.0f, // meleeRange
-        20.0f, // meleeDamage
-        .dashCooldown = cooldownCreate(0.5f), // dashCooldown
-        .attackCooldown = cooldownCreate(1.0f), // attackCooldown
-        .attackAnim = cooldownCreate(0.2f),
+        .position= (sfVector2f) {4*16,7*16},
+        .velocity = (sfVector2f) {0,0},
+        .lastDir = (sfVector2f) {1,0},
+        .rectBound = (sfFloatRect) {4*16-5,7*16-5,10,10},
+        .fillCol = sfColor_fromRGBA(255,165,0,255),
+        .speed = 90.0f,
+        .acc = 10000.0f,
+        .dashSpeed = 600.0f,
+        .health = 100,
+        .meleeRange = 70.0f,
+        .meleeDamage = 20.0f,
+        .dashCooldown = Cooldown_Create(0.5f),
+        .attackCooldown = Cooldown_Create(1.0f),
+        .attackAnim = Cooldown_Create(0.2f),
+        .damageAnim = Cooldown_Create(0.05f),
     };
 }
 
@@ -91,54 +97,36 @@ void attackMelee() {
         return;
 
     // start attack
-    cooldownRestart(player.attackAnim);
-    cooldownRestart(player.attackCooldown);
+    Cooldown_Reset(player.attackAnim);
+    Cooldown_Reset(player.attackCooldown);
     player.attackStartAngle = 180.0f*atan2f(player.lastDir.y,player.lastDir.x)/PI;
 
     // find enemies in range
     for (int i=0; i<numEnemies; i++) {
         sfVector2f ab = sfVec2f_sub(player.position,enemies[i].position);
-        if (sfVec2f_len(ab) >= player.meleeRange) {
+        if (sfVec2f_len(ab) <= player.meleeRange+enemies[i].rectBound.width/2.0f) {
             Entity_damage(&enemies[i],player.meleeDamage);
         }
     }
 }
 
 void Game_Render(sfRenderWindow* window) {
-    renderPlayer(window);
-    renderEnemies(window);
     animateSword(window);
+    Entity_render(window, &player);
+    for (int i=0; i<numEnemies; i++) {
+        Entity_render(window, &enemies[i]);
+    }
 }
 
 float lerp(float a, float b, float t) {
     return a+(b-a)*t;
 }
 
-void renderEnemies(sfRenderWindow* window) {
-    sfRectangleShape* rect = sfRectangleShape_create();
-    sfRenderStates renderState = sfRenderStates_default();
-    sfRectangleShape_setSize(rect, (sfVector2f) {player.rectBound.width, player.rectBound.height});
-    for (int i=0; i<numEnemies; i++) {
-        sfRectangleShape_setPosition(rect, (sfVector2f) {enemies[i].rectBound.left,enemies[i].rectBound.top});
-        sfRectangleShape_setFillColor(rect, sfRed);
-        sfRenderWindow_drawRectangleShape(window, rect, &renderState);
-    }
-}
-
-void renderPlayer(sfRenderWindow* window) {
-    sfRectangleShape* rect = sfRectangleShape_create();
-    sfRenderStates renderState = sfRenderStates_default();
-    sfRectangleShape_setPosition(rect, (sfVector2f) {player.rectBound.left, player.rectBound.top});
-    sfRectangleShape_setSize(rect, (sfVector2f) {player.rectBound.width, player.rectBound.height});
-    sfRectangleShape_setFillColor(rect, sfBlue);
-    sfRenderWindow_drawRectangleShape(window, rect, &renderState);
-}
-
 void animateSword(sfRenderWindow* window) {
     sfRenderStates renderState = sfRenderStates_default();
 
-    if (cooldownGet(player.attackAnim) >= 0) {
-        float t = 1 - cooldownGet(player.attackAnim)/player.attackAnim.cooldownLength;
+    if (Cooldown_Get(player.attackAnim) >= 0) {
+        float t = 1 - Cooldown_Get(player.attackAnim)/player.attackAnim.cooldownLength;
         float angle = lerp(player.attackStartAngle-90.0f, player.attackStartAngle+90.0f, t);
         sfRectangleShape* swordRect = sfRectangleShape_create();
         sfRectangleShape_setOrigin(swordRect, (sfVector2f) {0.0f,2.5f});
