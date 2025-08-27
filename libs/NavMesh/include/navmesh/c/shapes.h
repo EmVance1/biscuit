@@ -16,7 +16,12 @@ float navVec2f_dot(navVector2f a, navVector2f b);
 float navVec2f_len(navVector2f v);
 navVector2f navVec2f_norm(navVector2f v);
 navVector2f navVec2f_compDiv(navVector2f a, navVector2f b);
+navVector2f navVec2f_compDivFloor(navVector2f a, navVector2f b);
 navVector2f navVec2f_compMul(navVector2f a, navVector2f b);
+navVector2f navVec2f_perpCw(navVector2f v);
+navVector2f navVec2f_perpCcw(navVector2f v);
+float navVec2f_cmp(navVector2f a, navVector2f b);
+float navVec2f_angle(navVector2f a, navVector2f b);
 
 
 typedef struct navVector2i {
@@ -35,7 +40,7 @@ navVector2i navVec2i_compDivFloor(navVector2i a, navVector2i b);
 navVector2i navVec2i_compMul(navVector2i a, navVector2i b);
 navVector2i navVec2i_perpCw(navVector2i v);
 navVector2i navVec2i_perpCcw(navVector2i v);
-float navVec2i_cmp(navVector2i a, navVector2i b);
+int   navVec2i_cmp(navVector2i a, navVector2i b);
 float navVec2i_angle(navVector2i a, navVector2i b);
 
 

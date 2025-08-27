@@ -1,16 +1,13 @@
 #ifndef GAME_H
 #define GAME_H
-#include "SFML/Graphics.h"
+#include <SFML/Graphics.h>
 
-void processKeyClicked();
 
-void GameInit();
+void Game_Init();
+void Game_Update();
+void Game_Render(sfRenderWindow* window);
 
-void GameUpdate();
-
-void GameRender(sfRenderWindow* window);
-
-void GameDestroy();
+void Game_Destroy();
 
 void attackMelee();
 

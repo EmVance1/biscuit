@@ -40,6 +40,10 @@ static int Set_size(uint64_t set) {
     return count;
 }
 
+static bool Set_contains(uint64_t set, int val) {
+    return set & (1 << val);
+}
+
 static uint64_t Set_intersection(uint64_t lhs, uint64_t rhs) {
     return lhs & rhs;
 }
@@ -93,14 +97,17 @@ void waveFunctionCollapse(int32_t* board, sfVector2u boardsize, const AdjacencyR
 
         // find smallest set
         int min = 65;
+        size_t min_set = 0;
         size_t min_x = SIZE_MAX;
         size_t min_y = SIZE_MAX;
         for (size_t y = 0; y < (size_t)boardsize.y; y++) {
             for (size_t x = 0; x < (size_t)boardsize.x; x++) {
-                const int s = Set_size(possibilities[y * boardsize.x + x]);
+                const uint64_t set = possibilities[y * boardsize.x + x];
+                const int s = Set_size(set);
                 if (s == 1) { continue; }
                 if (s < min) {
                     min = s;
+                    min_set = set;
                     min_x = x;
                     min_y = y;
                 }
@@ -113,8 +120,18 @@ void waveFunctionCollapse(int32_t* board, sfVector2u boardsize, const AdjacencyR
         }
 
         // collapse smallest set
-        bool choices[64] = { 0 };
-        board[min_y * boardsize.x + min_x] = min;
+        int j = 0;
+        const int choice_idx = rand() % min;
+        for (int i = 0; i < 64; i++) {
+            if (Set_contains(min_set, i)) {
+                if (j == choice_idx) {
+                    board[min_y * boardsize.x + min_x] = min;
+                    break;
+                } else {
+                    j++;
+                }
+            }
+        }
     }
 }
 

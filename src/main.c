@@ -1,4 +1,5 @@
 #include <SFML/Graphics.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include "Game.h"
 #include "atlas.h"
@@ -12,6 +13,11 @@
 #else
     #define SCREEN_MODE sfFullscreen
 #endif
+
+
+sfVector2u tileFromIndex(uint32_t idx) {
+    return (sfVector2u){ .x = idx & 0b00000111, .y = idx & 0b00111000};
+}
 
 
 sfuTileMap* sandboxMap(const sfuTextureAtlas* atlas) {
@@ -33,6 +39,7 @@ sfuTileMap* sandboxMap(const sfuTextureAtlas* atlas) {
 int main() {
     sfVideoMode videomode = sfVideoMode_getDesktopMode();
     sfRenderWindow* window = sfRenderWindow_create(videomode, "Biscuit", SCREEN_MODE, NULL);
+    srand((time_t)NULL);
     Clock_init();
 
     sfView* camera = sfView_createFromRect((sfFloatRect){ 0, 0, 480, 270 });
@@ -48,7 +55,7 @@ int main() {
     sfuTextureAtlas* tileatlas = sfuTextureAtlas_createFromFile("res/textures/tilesheet.png", (sfVector2u){ 8, 8 });
     sfuTileMap* sandbox = sandboxMap(tileatlas);
 
-    GameInit();
+    Game_Init();
 
     while (sfRenderWindow_isOpen(window)) {
         Clock_setFrame();
@@ -68,19 +75,19 @@ int main() {
             }
         }
 
-        GameUpdate();
+        Game_Update();
 
         sfRenderWindow_clear(window, (sfColor){ 0, 0, 0, 255 });
         sfRenderWindow_setView(window, camera);
 
         sfRenderWindow_drawTileMap(window, sandbox, NULL);
 
-        GameRender(window);
+        Game_Render(window);
 
         sfRenderWindow_display(window);
     }
 
-    GameDestroy();
+    Game_Destroy();
     sfuTileMap_free(sandbox);
     sfuTextureAtlas_free(tileatlas);
     sfView_destroy(camera);

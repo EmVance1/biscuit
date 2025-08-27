@@ -49,6 +49,10 @@ float sfVec2f_len(sfVector2f v);
 sfVector2f sfVec2f_norm(sfVector2f v);
 sfVector2f sfVec2f_compDiv(sfVector2f a, sfVector2f b);
 sfVector2f sfVec2f_compMul(sfVector2f a, sfVector2f b);
+sfVector2f sfVec2f_perpCw(sfVector2f v);
+sfVector2f sfVec2f_perpCcw(sfVector2f v);
+float sfVec2f_cmp(sfVector2f a, sfVector2f b);
+float sfVec2f_angle(sfVector2f a, sfVector2f b);
 
 
 ////////////////////////////////////////////////////////////
@@ -70,6 +74,10 @@ sfVector2f sfVec2i_norm(sfVector2i v);
 sfVector2f sfVec2i_compDiv(sfVector2i a, sfVector2i b);
 sfVector2i sfVec2i_compDivFloor(sfVector2i a, sfVector2i b);
 sfVector2i sfVec2i_compMul(sfVector2i a, sfVector2i b);
+sfVector2i sfVec2i_perpCw(sfVector2i v);
+sfVector2i sfVec2i_perpCcw(sfVector2i v);
+int   sfVec2i_cmp(sfVector2i a, sfVector2i b);
+float sfVec2i_angle(sfVector2i a, sfVector2i b);
 
 
 ////////////////////////////////////////////////////////////
@@ -91,6 +99,10 @@ sfVector2f sfVec2u_norm(sfVector2u v);
 sfVector2f sfVec2u_compDiv(sfVector2u a, sfVector2u b);
 sfVector2u sfVec2u_compDivFloor(sfVector2u a, sfVector2u b);
 sfVector2u sfVec2u_compMul(sfVector2u a, sfVector2u b);
+sfVector2u sfVec2u_perpCw(sfVector2u v);
+sfVector2u sfVec2u_perpCcw(sfVector2u v);
+int   sfVec2u_cmp(sfVector2u a, sfVector2u b);
+float sfVec2u_angle(sfVector2u a, sfVector2u b);
 
 
 #endif // SFML_VECTOR2_H

@@ -1,11 +1,7 @@
+#include <SFML/Graphics.h>
+#include <math.h>
 #include "Game.h"
 #include "Entity.h"
-#include "SFML/Graphics.h"
-#include "SFML/Graphics/RectangleShape.h"
-#include "SFML/Graphics/RenderStates.h"
-#include "SFML/Graphics/RenderWindow.h"
-#include "SFML/System/Clock.h"
-#include "SFML/System/Vector2.h"
 #include "clock.h"
 #include <stdio.h>
 #include <math.h>
@@ -17,7 +13,10 @@ static Entity player;
 static Entity* enemies;
 static int numEnemies;
 
-void GameInit() {
+
+static void processKeyClicked();
+
+void Game_Init() {
     player = (Entity) {
         (sfVector2f) {4*16,4*16}, // position
         (sfVector2f) {0,0}, // velocity
@@ -69,11 +68,11 @@ void GameInit() {
 }
 
 // decelerates player by 10% of current velocity
-void deceleratePlayer(Entity* player) {
-    if (fabsf(sfVec2f_len(player->velocity)) > 0.1) {
-        setVelocity(player, sfVec2f_scale(player->velocity,0.98));
+static void deceleratePlayer(Entity* _player) {
+    if (fabsf(sfVec2f_len(_player->velocity)) > 0.1) {
+        Entity_setVelocity(_player, sfVec2f_scale(_player->velocity, 0.95f));
     } else {
-        setVelocity(player, (sfVector2f) {0,0});
+        Entity_setVelocity(_player, (sfVector2f) {0,0});
     }
 }
 
@@ -81,10 +80,10 @@ static float getCooldown(Cooldown cooldown) {
     return cooldown.cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cooldown.clock));
 }
 
-void GameUpdate() {
+void Game_Update() {
     processKeyClicked();
     deceleratePlayer(&player);
-    moveEntity(&player);
+    Entity_move(&player);
 }
 
 void attackMelee() {
@@ -100,12 +99,12 @@ void attackMelee() {
     for (int i=0; i<numEnemies; i++) {
         sfVector2f ab = sfVec2f_sub(player.position,enemies[i].position);
         if (sfVec2f_len(ab) >= player.meleeRange) {
-            damage(&enemies[i],player.meleeDamage);
+            Entity_damage(&enemies[i],player.meleeDamage);
         }
     }
 }
 
-void GameRender(sfRenderWindow* window) {
+void Game_Render(sfRenderWindow* window) {
     renderPlayer(window);
     renderEnemies(window);
     animateSword(window);
@@ -152,28 +151,30 @@ void animateSword(sfRenderWindow* window) {
     }
 }
 
-void GameDestroy() {
+void Game_Destroy() {
     free(enemies);
 }
 
-void processKeyClicked() {
+
+static void processKeyClicked() {
     float dt = Clock_deltaTime();
     if (sfKeyboard_isKeyPressed(sfKeyW)) {
-        addVelocity(&player, (sfVector2f) {0, -player.acc*dt});
+        Entity_addVelocity(&player, (sfVector2f) {0, -player.acc*dt});
     }
     if (sfKeyboard_isKeyPressed(sfKeyS)) {
-        addVelocity(&player, (sfVector2f) {0, player.acc*dt});
+        Entity_addVelocity(&player, (sfVector2f) {0, player.acc*dt});
     }
     if (sfKeyboard_isKeyPressed(sfKeyA)) {
-        addVelocity(&player, (sfVector2f) {-player.acc*dt, 0});
+        Entity_addVelocity(&player, (sfVector2f) {-player.acc*dt, 0});
     }
     if (sfKeyboard_isKeyPressed(sfKeyD)) {
-        addVelocity(&player, (sfVector2f) {player.acc*dt, 0});
+        Entity_addVelocity(&player, (sfVector2f) {player.acc*dt, 0});
     }
     if (sfKeyboard_isKeyPressed(sfKeySpace)) {
-        startDash(&player);
+        Entity_startDash(&player);
     }
     if (sfMouse_isButtonPressed(sfMouseLeft)) {
         attackMelee();
     }
 }
+

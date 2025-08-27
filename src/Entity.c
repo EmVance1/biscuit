@@ -1,13 +1,11 @@
 #include "Entity.h"
-#include "SFML/System/Clock.h"
-#include "SFML/System/Time.h"
-#include "clock.h"
 #include <math.h>
 #include <stdio.h>
+#include "clock.h"
 
 
 // Does not account for delta time
-void offsetEntity(Entity* entity, sfVector2f dir) {
+void Entity_offset(Entity* entity, sfVector2f dir) {
     sfVector2f offset = dir;
     entity->position = sfVec2f_add(entity->position, offset);
     entity->rectBound.left += offset.x;
@@ -15,7 +13,7 @@ void offsetEntity(Entity* entity, sfVector2f dir) {
 }
 
 // Accounts for delta time
-void moveEntity(Entity* entity) {
+void Entity_move(Entity* entity) {
     sfVector2f offset = sfVec2f_scale(entity->velocity,Clock_deltaTime());
     entity->position = sfVec2f_add(entity->position, offset);
     entity->rectBound.left += offset.x;
@@ -25,7 +23,7 @@ void moveEntity(Entity* entity) {
     }
 }
 
-void addVelocity(Entity* entity, sfVector2f acceleration) {  
+void Entity_addVelocity(Entity* entity, sfVector2f acceleration) {  
     float prevSpeed = sfVec2f_len(entity->velocity);
     entity->velocity = sfVec2f_add(entity->velocity,acceleration);
 
@@ -40,7 +38,7 @@ void addVelocity(Entity* entity, sfVector2f acceleration) {
     }
 }
 
-void setVelocity(Entity* entity, sfVector2f velocity) {
+void Entity_setVelocity(Entity* entity, sfVector2f velocity) {
     entity->velocity = velocity;
 }
 
@@ -48,31 +46,30 @@ static float getCooldown(Cooldown cooldown) {
     return cooldown.cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cooldown.clock));
 }
 
-void startDash(Entity* entity) {
+void Entity_startDash(Entity* entity) {
     if (getCooldown(entity->dashCooldown) <= 0.0f) {
         sfVector2f velocity = entity->velocity;
         if (sfVec2f_len(velocity) == 0) return;
         velocity = sfVec2f_norm(velocity);
         velocity = sfVec2f_scale(velocity, entity->dashSpeed);
-        setVelocity(entity, velocity);
+        Entity_setVelocity(entity, velocity);
         sfClock_restart(entity->dashCooldown.clock);
     }
 }
 
-void damage(Entity* entity, float damage) {
+void Entity_damage(Entity* entity, float damage) {
     entity->health -= damage;
-    if (entity->health <= 0) kill(entity);
+    if (entity->health <= 0) Entity_kill(entity);
 }
 
-void kill(Entity* entity) {
+void Entity_kill(Entity* entity) {
 }
 
-void updateVelocity(Entity* entity) {
+void Entity_updateVelocity(Entity* entity) {
     // decelerate entity by 10% of current velocity
     sfVector2f oppositeVel = sfVec2f_scale(entity->velocity, -0.1f);
-    setVelocity(entity, oppositeVel);
+    Entity_setVelocity(entity, oppositeVel);
 }
-
 
 Cooldown cooldownDefault() {
     return (Cooldown) {sfClock_create(), 1.0f};
