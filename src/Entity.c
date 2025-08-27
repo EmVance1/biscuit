@@ -1,15 +1,28 @@
 #include "Entity.h"
+#include "SFML/System/Clock.h"
+#include "SFML/System/Time.h"
 #include "clock.h"
 #include <math.h>
 #include <stdio.h>
 
 
 // Does not account for delta time
-void moveEntity(Entity* entity, sfVector2f dir) {
+void offsetEntity(Entity* entity, sfVector2f dir) {
     sfVector2f offset = dir;
     entity->position = sfVec2f_add(entity->position, offset);
     entity->rectBound.left += offset.x;
     entity->rectBound.top += offset.y;
+}
+
+// Accounts for delta time
+void moveEntity(Entity* entity) {
+    sfVector2f offset = sfVec2f_scale(entity->velocity,Clock_deltaTime());
+    entity->position = sfVec2f_add(entity->position, offset);
+    entity->rectBound.left += offset.x;
+    entity->rectBound.top += offset.y;
+    if (sfVec2f_len(entity->velocity) > 0.01f) {
+        entity->lastDir = sfVec2f_norm(entity->velocity);
+    }
 }
 
 void addVelocity(Entity* entity, sfVector2f acceleration) {  
@@ -46,8 +59,38 @@ void startDash(Entity* entity) {
     }
 }
 
+void damage(Entity* entity, float damage) {
+    entity->health -= damage;
+    if (entity->health <= 0) kill(entity);
+}
+
+void kill(Entity* entity) {
+}
+
 void updateVelocity(Entity* entity) {
     // decelerate entity by 10% of current velocity
     sfVector2f oppositeVel = sfVec2f_scale(entity->velocity, -0.1f);
     setVelocity(entity, oppositeVel);
+}
+
+
+Cooldown cooldownDefault() {
+    return (Cooldown) {sfClock_create(), 1.0f};
+}
+
+float cooldownGet(Cooldown cd) {
+    return cd.cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cd.clock));
+}
+
+void cooldownSet(Cooldown cd, float time) {
+    cd.cooldownLength = time;
+    sfClock_restart(cd.clock);
+}
+
+void cooldownRestart(Cooldown cd) {
+    sfClock_restart(cd.clock);
+}
+
+Cooldown cooldownCreate(float time) {
+    return (Cooldown) {sfClock_create(), time};
 }
