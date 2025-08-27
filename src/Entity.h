@@ -12,6 +12,7 @@ typedef struct Entity {
     sfVector2f velocity;
     sfFloatRect rectBound;
     float speed;
+    float acc;
     float dashSpeed;
 
     Cooldown dashCooldown;
@@ -21,7 +22,7 @@ void moveEntity(Entity* entity, sfVector2f offset);
 
 void startDash(Entity* entity);
 
-void addVelocity(Entity* entity, sfVector2f velocity);
+void addVelocity(Entity* entity, sfVector2f acceleration);
 
 void setVelocity(Entity* entity, sfVector2f velocity);
 

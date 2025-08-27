@@ -1,5 +1,6 @@
 #include <SFML/Graphics.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "Game.h"
 #include "atlas.h"
 #include "clock.h"
@@ -30,7 +31,8 @@ sfuTileMap* sandboxMap(const sfuTextureAtlas* atlas) {
         2, 1,  0, 3,  1, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 1,
         3, 1,  1, 0,  1, 0,  1, 0,  1, 0,  1, 0,  1, 0,  4, 1,
     };
-
+    
+    printf("Generated tile map.\nCell size: %d,%d\nDimensions: %d, %d\n",atlas->cellsize.x,atlas->cellsize.y,8,8);
     return sfuTileMap_createFromIndices(atlas, (uint32_t*)map, (sfVector2u){ 8, 8 });
 }
 
@@ -54,6 +56,8 @@ int main() {
     sfuTextureAtlas* tileatlas = sfuTextureAtlas_createFromFile("res/textures/tilesheet.png", (sfVector2u){ 8, 8 });
     sfuTileMap* sandbox = sandboxMap(tileatlas);
 
+    GameInit();
+
     while (sfRenderWindow_isOpen(window)) {
         Clock_setFrame();
 
@@ -66,7 +70,6 @@ int main() {
             case sfEvtKeyPressed:
                 if (sfKeyboard_isKeyPressed(sfKeyEscape))
                     sfRenderWindow_close(window);
-                processKeyClicked(event);
                 break;
             default:
                 break;
@@ -78,9 +81,10 @@ int main() {
         sfRenderWindow_clear(window, (sfColor){ 0, 0, 0, 255 });
         sfRenderWindow_setView(window, camera);
 
+        sfRenderWindow_drawTileMap(window, sandbox, NULL);
+
         GameRender(window);
 
-        sfRenderWindow_drawTileMap(window, sandbox, NULL);
         sfRenderWindow_display(window);
     }
 
