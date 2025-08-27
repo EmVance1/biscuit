@@ -1,4 +1,5 @@
 #include <SFML/Graphics.h>
+#include <stdlib.h>
 #include "Game.h"
 #include "atlas.h"
 #include "clock.h"
@@ -11,6 +12,11 @@
 #else
     #define SCREEN_MODE sfFullscreen
 #endif
+
+
+sfVector2u tileFromIndex(uint32_t idx) {
+    return (sfVector2u){ .x = idx & 0b00000111, .y = idx & 0b00111000};
+}
 
 
 sfuTileMap* sandboxMap(const sfuTextureAtlas* atlas) {
@@ -32,6 +38,7 @@ sfuTileMap* sandboxMap(const sfuTextureAtlas* atlas) {
 int main() {
     sfVideoMode videomode = sfVideoMode_getDesktopMode();
     sfRenderWindow* window = sfRenderWindow_create(videomode, "Biscuit", SCREEN_MODE, NULL);
+    srand((time_t)NULL);
     Clock_init();
 
     sfView* camera = sfView_createFromRect((sfFloatRect){ 0, 0, 480, 270 });
