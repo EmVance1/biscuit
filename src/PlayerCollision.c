@@ -1,7 +1,7 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include "PlayerCollision.h"
 #include "Entity.h"
+
 
 bool rectLineCollision(sfFloatRect rect, sfVector2f v0, sfVector2f v1) {
     if (v0.y == v1.y) {
@@ -82,7 +82,7 @@ bool handlePlayerWallCollision(Entity* player, sfVector2f* vertices, int numVert
     }
     if (lines > 0) {
         sfVector2f offset = resolveRectLineCollision(rectBound, collisionVertices, lines);
-        moveEntity(player, offset);
+        Entity_move(player, offset);
         if (offset.x == 0 && offset.y == 0) return false;
     } else return false;
 

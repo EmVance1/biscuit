@@ -1,13 +1,15 @@
+#include <SFML/Graphics.h>
+#include <math.h>
 #include "Game.h"
 #include "Entity.h"
-#include "SFML/Graphics.h"
 #include "clock.h"
-#include <stdio.h>
-#include <math.h>
 
 static Entity player;
 
-void GameInit() {
+
+static void processKeyClicked();
+
+void Game_Init() {
     player = (Entity) {
         (sfVector2f) {0,0},
         (sfVector2f) {0,0},
@@ -20,21 +22,21 @@ void GameInit() {
 }
 
 // decelerates player by 10% of current velocity
-void deceleratePlayer(Entity* player) {
-    if (fabsf(sfVec2f_len(player->velocity)) > 0.1) {
-        setVelocity(player, sfVec2f_scale(player->velocity,0.95));
+static void deceleratePlayer(Entity* _player) {
+    if (fabsf(sfVec2f_len(_player->velocity)) > 0.1) {
+        Entity_setVelocity(_player, sfVec2f_scale(_player->velocity, 0.95f));
     } else {
-        setVelocity(player, (sfVector2f) {0,0});
+        Entity_setVelocity(_player, (sfVector2f) {0,0});
     }
 }
 
-void GameUpdate() {
+void Game_Update() {
     processKeyClicked();
     deceleratePlayer(&player);
-    moveEntity(&player, sfVec2f_scale(player.velocity,Clock_deltaTime()));
+    Entity_move(&player, sfVec2f_scale(player.velocity,Clock_deltaTime()));
 }
 
-void GameRender(sfRenderWindow* window) {
+void Game_Render(sfRenderWindow* window) {
     sfRectangleShape* playerRect = sfRectangleShape_create();
     sfRenderStates renderState = sfRenderStates_default();
     sfRectangleShape_setPosition(playerRect, (sfVector2f) {player.rectBound.left, player.rectBound.top});
@@ -43,21 +45,23 @@ void GameRender(sfRenderWindow* window) {
     sfRenderWindow_drawRectangleShape(window, playerRect, &renderState);
 }
 
-void processKeyClicked() {
+
+static void processKeyClicked() {
     float dt = Clock_deltaTime();
     if (sfKeyboard_isKeyPressed(sfKeyW)) {
-        addVelocity(&player, (sfVector2f) {0, -player.acc*dt});
+        Entity_addVelocity(&player, (sfVector2f) {0, -player.acc*dt});
     }
     if (sfKeyboard_isKeyPressed(sfKeyS)) {
-        addVelocity(&player, (sfVector2f) {0, player.acc*dt});
+        Entity_addVelocity(&player, (sfVector2f) {0, player.acc*dt});
     }
     if (sfKeyboard_isKeyPressed(sfKeyA)) {
-        addVelocity(&player, (sfVector2f) {-player.acc*dt, 0});
+        Entity_addVelocity(&player, (sfVector2f) {-player.acc*dt, 0});
     }
     if (sfKeyboard_isKeyPressed(sfKeyD)) {
-        addVelocity(&player, (sfVector2f) {player.acc*dt, 0});
+        Entity_addVelocity(&player, (sfVector2f) {player.acc*dt, 0});
     }
     if (sfKeyboard_isKeyPressed(sfKeySpace)) {
-        startDash(&player);
+        Entity_startDash(&player);
     }
 }
+

@@ -77,7 +77,7 @@ sfVector2f PathTracker_getTargetPosition(const PathTracker* self) {
 }
 
 
-const navPath* PathTracker_getActivePath(PathTracker* self) {
+const navPath* PathTracker_getActivePath(const PathTracker* self) {
     return self->path;
 }
 

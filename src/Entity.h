@@ -1,6 +1,7 @@
 #ifndef ENTITY_H
 #define ENTITY_H
-#include "SFML/Graphics.h"
+#include <SFML/Graphics.h>
+
 
 typedef struct Cooldown {
     sfClock* clock;
@@ -18,13 +19,15 @@ typedef struct Entity {
     Cooldown dashCooldown;
 } Entity;
 
-void moveEntity(Entity* entity, sfVector2f offset);
+void Entity_move(Entity* entity, sfVector2f offset);
 
-void startDash(Entity* entity);
+void Entity_startDash(Entity* entity);
 
-void addVelocity(Entity* entity, sfVector2f acceleration);
+void Entity_addVelocity(Entity* entity, sfVector2f acceleration);
 
-void setVelocity(Entity* entity, sfVector2f velocity);
+void Entity_setVelocity(Entity* entity, sfVector2f velocity);
 
-void updateVelocity(Entity* entity);
+void Entity_updateVelocity(Entity* entity);
+
+
 #endif

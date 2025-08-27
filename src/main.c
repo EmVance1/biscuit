@@ -56,7 +56,7 @@ int main() {
     sfuTextureAtlas* tileatlas = sfuTextureAtlas_createFromFile("res/textures/tilesheet.png", (sfVector2u){ 8, 8 });
     sfuTileMap* sandbox = sandboxMap(tileatlas);
 
-    GameInit();
+    Game_Init();
 
     while (sfRenderWindow_isOpen(window)) {
         Clock_setFrame();
@@ -76,14 +76,14 @@ int main() {
             }
         }
 
-        GameUpdate();
+        Game_Update();
 
         sfRenderWindow_clear(window, (sfColor){ 0, 0, 0, 255 });
         sfRenderWindow_setView(window, camera);
 
         sfRenderWindow_drawTileMap(window, sandbox, NULL);
 
-        GameRender(window);
+        Game_Render(window);
 
         sfRenderWindow_display(window);
     }
