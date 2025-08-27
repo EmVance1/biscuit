@@ -1,7 +1,11 @@
 #ifndef PATHTRACKER_H
 #define PATHTRACKER_H
 #include <SFML/Graphics.h>
-#include <navmesh/c/lib.h>
+#include <stdbool.h>
+
+
+typedef struct navMesh navMesh;
+typedef struct navPath navPath;
 
 
 typedef struct PathTracker PathTracker;

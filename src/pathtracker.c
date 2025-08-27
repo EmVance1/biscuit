@@ -1,4 +1,5 @@
 #include <SFML/Graphics.h>
+#include <navmesh/c/lib.h>
 #include <stdlib.h>
 #include "pathtracker.h"
 #include "clock.h"
