@@ -29,6 +29,7 @@ PathTracker* PathTracker_create(const navMesh* mesh) {
 }
 
 void PathTracker_free(const PathTracker* self) {
+    free(self->path);
     free((PathTracker*)self);
 }
 
