@@ -3,13 +3,16 @@
 #include "navmesh/c/mesh.h"
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef bool(*navPredicate)(const uint8_t*);
 
-enum navMethod {
+typedef enum navMethod {
     GEN_METHOD_MARCHING_SQUARES,
     GEN_METHOD_FLOODFILL,
-};
+} navMethod;
 
 navMesh* navMesh_createFromGrid(
         const uint8_t* grid,
@@ -34,5 +37,9 @@ navMesh navMesh_createFromShapes(
     );
 */
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

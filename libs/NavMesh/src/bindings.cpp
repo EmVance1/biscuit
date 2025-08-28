@@ -6,6 +6,9 @@
 static nav::Vector2f fromc(navVector2f v) { return nav::Vector2f{ v.x, v.y }; }
 static navVector2f intoc(nav::Vector2f v) { return navVector2f{ v.x, v.y }; }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 navVector2f navVec2f_add(navVector2f a, navVector2f b) { return navVector2f{ a.x + b.x, a.y + b.y }; }
 navVector2f navVec2f_sub(navVector2f a, navVector2f b) { return navVector2f{ a.x - b.x, a.y - b.y }; }
@@ -109,4 +112,8 @@ navMesh* navMesh_createFromGrid(
     result->impl = nav::generate_delauney(grid, width, height, stride, index, (nav::Method)method, epsilon);
     return result;
 }
+
+#ifdef __cplusplus
+}
+#endif
 

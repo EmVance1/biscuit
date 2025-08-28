@@ -2,6 +2,9 @@
 #define NAVMESH_C_MESH_H
 #include "navmesh/c/shapes.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct navMesh navMesh;
 
@@ -18,5 +21,8 @@ void navMesh_free(const navMesh* self);
 size_t navMesh_getTriangleIndex(const navMesh* self, navVector2f p, float error);
 navPath* navMesh_findPath(const navMesh* self, navVector2f begin, navVector2f end);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

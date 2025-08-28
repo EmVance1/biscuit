@@ -3,6 +3,9 @@
 #include <stdbool.h>
 #include <math.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct navVector2f {
     float x;
@@ -44,7 +47,6 @@ int   navVec2i_cmp(navVector2i a, navVector2i b);
 float navVec2i_angle(navVector2i a, navVector2i b);
 
 
-
 typedef struct navCircle {
     navVector2f pos;
     float radius;
@@ -65,5 +67,8 @@ navVector2f navTriangle_circumcenter(const navTriangle* self, const navVector2f*
 bool navTriangle_contains(const navTriangle* self, const navVector2f* vertices, navVector2f p, bool with_corners);
 bool navTriangle_contains_with_error(const navTriangle* self, const navVector2f* vertices, navVector2f p, float error);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
