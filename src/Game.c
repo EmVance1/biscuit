@@ -22,7 +22,6 @@ static float lerp(float a, float b, float t);
 static void processKeyClicked();
 static void animateSword(sfRenderWindow* window);
 static void deceleratePlayer(Entity* _player);
-static void handleWallCollisions();
 static void attackMelee();
 static void stunArea();
 static void castFireball();
@@ -31,6 +30,7 @@ static void caseHazardCloud();
 
 void Game_Init() {
     player = (Entity) {
+        .is_alive = true,
         .position = (sfVector2f) {4*16,4*16},
         .velocity = (sfVector2f) {0,0},
         .lastDir = (sfVector2f) {1,0},
@@ -42,15 +42,16 @@ void Game_Init() {
         .health = 100,
         .meleeRange = 25.0f,
         .meleeDamage = 40.0f,
-        .dashCooldown = Cooldown_Create(0.5f),
-        .attackCooldown = Cooldown_Create(0.3f),
-        .attackAnim = Cooldown_Create(0.2f),
-        .damageAnim = Cooldown_Create(0.05f),
+        .dashCooldown = Cooldown_create(0.5f),
+        .attackCooldown = Cooldown_create(0.3f),
+        .attackAnim = Cooldown_create(0.2f),
+        .damageAnim = Cooldown_create(0.05f),
     };
 
     numEnemies = 2;
     enemies = (Entity*) malloc(sizeof(Entity)*numEnemies);
     enemies[0] = (Entity) {
+        .is_alive = true,
         .position = (sfVector2f) {6*15,3*16},
         .velocity = (sfVector2f) {0,0},
         .lastDir = (sfVector2f) {1,0},
@@ -62,12 +63,13 @@ void Game_Init() {
         .health = 100,
         .meleeRange = 70.0f,
         .meleeDamage = 20.0f,
-        .dashCooldown = Cooldown_Create(0.5f),
-        .attackCooldown = Cooldown_Create(1.0f),
-        .attackAnim = Cooldown_Create(0.2f),
-        .damageAnim = Cooldown_Create(0.05f),
+        .dashCooldown = Cooldown_create(0.5f),
+        .attackCooldown = Cooldown_create(1.0f),
+        .attackAnim = Cooldown_create(0.2f),
+        .damageAnim = Cooldown_create(0.05f),
     };
     enemies[1] = (Entity) {
+        .is_alive = true,
         .position= (sfVector2f) {4*16,7*16},
         .velocity = (sfVector2f) {0,0},
         .lastDir = (sfVector2f) {1,0},
@@ -79,10 +81,10 @@ void Game_Init() {
         .health = 100,
         .meleeRange = 70.0f,
         .meleeDamage = 20.0f,
-        .dashCooldown = Cooldown_Create(0.5f),
-        .attackCooldown = Cooldown_Create(1.0f),
-        .attackAnim = Cooldown_Create(0.2f),
-        .damageAnim = Cooldown_Create(0.05f),
+        .dashCooldown = Cooldown_create(0.5f),
+        .attackCooldown = Cooldown_create(1.0f),
+        .attackAnim = Cooldown_create(0.2f),
+        .damageAnim = Cooldown_create(0.05f),
     };
 }
 
@@ -94,19 +96,18 @@ void Game_SetMeshPolygons(navPolygonArray* meshPoly) {
 
 void Game_Update() {
     processKeyClicked();
-
     Collision_HandlePlayerNavmesh(&player, meshPolygons);
-    printf("Collisions done");
     deceleratePlayer(&player);
     Entity_move(&player);
 }
 
-
 void Game_Render(sfRenderWindow* window) {
     animateSword(window);
     Entity_render(window, &player);
-    for (int i=0; i<numEnemies; i++) {
-        Entity_render(window, &enemies[i]);
+    for (int i = 0; i < numEnemies; i++) {
+        if (enemies[i].is_alive) {
+            Entity_render(window, &enemies[i]);
+        }
     }
 }
 
@@ -154,12 +155,12 @@ static void deceleratePlayer(Entity* _player) {
 
 
 static void attackMelee() {
-    if (Cooldown_Get(player.attackCooldown) > 0)
+    if (Cooldown_get(&player.attackCooldown) > 0)
         return;
 
     // start attack
-    Cooldown_Reset(player.attackAnim);
-    Cooldown_Reset(player.attackCooldown);
+    Cooldown_reset(&player.attackAnim);
+    Cooldown_reset(&player.attackCooldown);
     player.attackStartAngle = 180.0f*atan2f(player.lastDir.y,player.lastDir.x)/PI;
 
     // find enemies in range
@@ -180,8 +181,8 @@ static float lerp(float a, float b, float t) {
 static void animateSword(sfRenderWindow* window) {
     sfRenderStates renderState = sfRenderStates_default();
 
-    if (Cooldown_Get(player.attackAnim) >= 0) {
-        float t = 1 - Cooldown_Get(player.attackAnim)/player.attackAnim.cooldownLength;
+    if (Cooldown_get(&player.attackAnim) >= 0) {
+        float t = 1 - Cooldown_get(&player.attackAnim)/player.attackAnim.cooldownLength;
         float angle = lerp(player.attackStartAngle-90.0f, player.attackStartAngle+90.0f, t);
         sfRectangleShape* swordRect = sfRectangleShape_create();
         sfRectangleShape_setOrigin(swordRect, (sfVector2f) {0.0f,2.5f});
@@ -202,7 +203,7 @@ static bool entityInRange(Entity* first, Entity* second, float range) {
 static void stunArea() {
    for (int i=0; i<numEnemies; i++) {
        if (entityInRange(&player, &enemies[i], player.stunRange)) {
-           Cooldown_Set(enemies[i].stunEffect,player.stunDuration);
+           Cooldown_set(&enemies[i].stunEffect,player.stunDuration);
        }
    }
 }

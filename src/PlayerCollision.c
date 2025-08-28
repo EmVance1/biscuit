@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "PlayerCollision.h"
 #include "Entity.h"
 
@@ -102,8 +103,10 @@ bool Collision_HandlePlayerNavmesh(Entity* player, navPolygonArray* meshPolys) {
         for (int i=0; i<iters; i++) {
             navVector2f nav0 = meshPolys->polys[k]->points[i];
             navVector2f nav1 = meshPolys->polys[k]->points[(i+1)%numVertices];
-            sfVector2f v0 = (sfVector2f) {nav0.x,nav0.y};
-            sfVector2f v1 = (sfVector2f) {nav1.x,nav1.y};
+
+            sfVector2f v0 = (sfVector2f) {nav0.x*16,nav0.y*16};
+            sfVector2f v1 = (sfVector2f) {nav1.x*16,nav1.y*16};
+
             if (Collision_RectLine(rectBound, v0, v1)) {
                 collisionVertices[2*lines+0] = v0;
                 collisionVertices[2*lines+1] = v1;
