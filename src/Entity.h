@@ -62,9 +62,10 @@ Cooldown Cooldown_create(float time);
 Cooldown Cooldown_default();
 void Cooldown_free(const Cooldown* self);
 void Cooldown_reset(Cooldown* cd);
+void Cooldown_set(Cooldown* cd, float time);
 // Returns remaining time on cooldown in seconds
 float Cooldown_get(const Cooldown* cd);
-void Cooldown_set(Cooldown* cd, float time);
+bool Cooldown_ready(const Cooldown* cd);
 
 
 #endif

@@ -7,20 +7,20 @@
 
 
 Entity Entity_createPlayer(sfVector2f position) {
-    const sfVector2f size = (sfVector2f){ 10, 10 };
+    const sfVector2f size = (sfVector2f){ 15, 25 };
 
     return (Entity){
         .is_alive = true,
         .position  = position,
         .velocity  = (sfVector2f){ 0, 0 },
         .lastDir   = (sfVector2f){ 1, 0 },
-        .rectBound = (sfFloatRect){position.x, position.y, size.x, size.y },
+        .rectBound = (sfFloatRect){position.x - size.x * 0.5f, position.y - size.y * 0.5f, size.x, size.y },
         .fillCol = sfBlue,
-        .speed = 90.0f,
+        .speed = 300.0f,
         .acc = 10000.0f,
         .dashSpeed = 600.0f,
         .health = 100,
-        .meleeRange  = 25.0f,
+        .meleeRange  = size.x * 2.5f,
         .meleeDamage = 40.0f,
         .dashCooldown   = Cooldown_create(0.5f),
         .attackCooldown = Cooldown_create(0.3f),
@@ -31,14 +31,14 @@ Entity Entity_createPlayer(sfVector2f position) {
 }
 
 Entity Entity_createEnemy(sfVector2f position, sfColor color, const navMesh* navmesh) {
-    const sfVector2f size = (sfVector2f){ 10, 10 };
+    const sfVector2f size = (sfVector2f){ 15, 25 };
 
     return (Entity){
         .is_alive = true,
         .position  = position,
         .velocity  = (sfVector2f){ 0, 0 },
         .lastDir   = (sfVector2f){ 1, 0 },
-        .rectBound = (sfFloatRect){position.x, position.y, size.x, size.y },
+        .rectBound = (sfFloatRect){position.x - size.x * 0.5f, position.y - size.y * 0.5f, size.x, size.y },
         .fillCol = color,
         .speed = 90.0f,
         .acc = 10000.0f,
@@ -175,11 +175,16 @@ void Cooldown_reset(Cooldown* cd) {
     sfClock_restart(cd->clock);
 }
 
-float Cooldown_get(const Cooldown* cd) {
-    return cd->cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cd->clock));
-}
-
 void Cooldown_set(Cooldown* cd, float time) {
     cd->cooldownLength = time;
     sfClock_restart(cd->clock);
 }
+
+float Cooldown_get(const Cooldown* cd) {
+    return cd->cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cd->clock));
+}
+
+bool Cooldown_ready(const Cooldown* cd) {
+    return sfTime_asSeconds(sfClock_getElapsedTime(cd->clock)) >= cd->cooldownLength;
+}
+
