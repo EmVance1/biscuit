@@ -146,13 +146,13 @@ void sfuAnimatedSprite_update(sfuAnimatedSprite* self, float dt) {
 }
 
 
-void sfRenderWindow_drawAnimatedSprite(sfRenderWindow* window, const sfuAnimatedSprite* self, const sfRenderStates* states) {
+void sfRenderWindow_drawAnimatedSprite(sfRenderWindow* window, const sfuAnimatedSprite* anim, const sfRenderStates* states) {
     sfRenderStates mystates = sfRenderStates_default();
-    mystates.texture = self->atlas->texture;
-    mystates.transform = sfTransformable_getTransform(self->transform);
+    mystates.texture = anim->atlas->texture;
+    mystates.transform = sfTransformable_getTransform(anim->transform);
     if (states) {
         sfTransform_combine(&mystates.transform, &states->transform);
     }
-    sfRenderWindow_drawPrimitives(window, self->vertices, 4, sfTriangleStrip, &mystates);
+    sfRenderWindow_drawPrimitives(window, anim->vertices, 4, sfTriangleStrip, &mystates);
 }
 
