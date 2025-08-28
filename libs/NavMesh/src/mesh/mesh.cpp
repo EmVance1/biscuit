@@ -11,6 +11,36 @@ namespace nav {
 #endif
 
 
+Mesh::Mesh(const Mesh& other)
+    : vertices(other.vertices), triangles(other.triangles), edges(other.edges)
+{
+    printf("copy construct\n");
+}
+
+Mesh::Mesh(Mesh&& other)
+    : vertices(std::move(other.vertices)), triangles(std::move(other.triangles)), edges(std::move(other.edges))
+{
+    printf("move construct\n");
+}
+
+
+Mesh& Mesh::operator=(const Mesh& other) {
+    vertices  = other.vertices;
+    triangles = other.triangles;
+    edges     = other.edges;
+    printf("assign copy\n");
+    return *this;
+}
+
+Mesh& Mesh::operator=(Mesh&& other) {
+    vertices  = std::move(other.vertices);
+    triangles = std::move(other.triangles);
+    edges     = std::move(other.edges);
+    printf("assign move\n");
+    return *this;
+}
+
+
 std::optional<size_t> Mesh::get_triangle(Vector2f p, float error) const {
     for (usize i = 0; i < triangles.size(); i++) {
         if (triangles[i].contains(vertices.data(), p)) {

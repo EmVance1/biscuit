@@ -3,7 +3,7 @@
 #include "gen_internal.h"
 #include "simplify.h"
 
-#include "bench.h"
+#include <iostream>
 
 
 namespace nav {
@@ -160,17 +160,17 @@ Mesh generate_delauney(
         Method method,
         float epsilon)
 {
-    BENCH_BEGIN;
-
+    /*
     const auto len = width * height;
-
     auto polys = method == Method::MARCHING_SQUARES ?
         marching_squares(grid, width, height, stride, index) :
             len > 400 * 400 ?
                 floodfill_threaded(grid, width, height, stride, index) :
                 floodfill(grid, width, height, stride, index);
-
-    BENCH_STEP("polygon construction");
+    */
+    auto polys = method == Method::MARCHING_SQUARES ?
+        marching_squares(grid, width, height, stride, index) :
+        floodfill(grid, width, height, stride, index);
 
     auto verts = std::vector<CDT::V2d<f32>>();
     auto edges = std::vector<CDT::Edge>();
@@ -194,14 +194,10 @@ Mesh generate_delauney(
         offset += dp.size();
     }
 
-    BENCH_STEP("simplify & prepare");
-
     auto cdt = CDT::Triangulation<float>();
     cdt.insertVertices(verts);
     cdt.insertEdges(edges);
-    cdt.eraseOuterTrianglesAndHoles();
-
-    BENCH_STEP("triangulation");
+    cdt.eraseOuterTriangles();
 
     auto mesh = Mesh();
     mesh.vertices.reserve(cdt.vertices.size());
@@ -209,7 +205,7 @@ Mesh generate_delauney(
     mesh.edges.reserve(cdt.triangles.size());
 
     for (const auto& vert : cdt.vertices) {
-        mesh.vertices.push_back(Vector2f{ vert.x * 0.1f, vert.y * 0.1f });
+        mesh.vertices.push_back(Vector2f{ vert.x, vert.y });
     }
     for (const auto& tri : cdt.triangles) {
         mesh.triangles.push_back(Triangle{
@@ -220,8 +216,8 @@ Mesh generate_delauney(
         auto ns = std::vector<Mesh::Edge>();
         if (tri.neighbors[0] != CDT::noNeighbor) {
             const auto [_v1, _v2] = shared_edge(tri, cdt.triangles[tri.neighbors[0]]);
-            const auto v1 = Vector2f{ cdt.vertices[_v1].x, cdt.vertices[_v1].y } * 0.1f;
-            const auto v2 = Vector2f{ cdt.vertices[_v2].x, cdt.vertices[_v2].y } * 0.1f;
+            const auto v1 = Vector2f{ cdt.vertices[_v1].x, cdt.vertices[_v1].y };
+            const auto v2 = Vector2f{ cdt.vertices[_v2].x, cdt.vertices[_v2].y };
             ns.push_back(Mesh::Edge{
                 tri.neighbors[0],
                 v1 + (v2 - v1) / 2,
@@ -230,8 +226,8 @@ Mesh generate_delauney(
         }
         if (tri.neighbors[1] != CDT::noNeighbor) {
             const auto [_v1, _v2] = shared_edge(tri, cdt.triangles[tri.neighbors[1]]);
-            const auto v1 = Vector2f{ cdt.vertices[_v1].x, cdt.vertices[_v1].y } * 0.1f;
-            const auto v2 = Vector2f{ cdt.vertices[_v2].x, cdt.vertices[_v2].y } * 0.1f;
+            const auto v1 = Vector2f{ cdt.vertices[_v1].x, cdt.vertices[_v1].y };
+            const auto v2 = Vector2f{ cdt.vertices[_v2].x, cdt.vertices[_v2].y };
             ns.push_back(Mesh::Edge{
                 tri.neighbors[1],
                 v1 + (v2 - v1) / 2,
@@ -240,8 +236,8 @@ Mesh generate_delauney(
         }
         if (tri.neighbors[2] != CDT::noNeighbor) {
             const auto [_v1, _v2] = shared_edge(tri, cdt.triangles[tri.neighbors[2]]);
-            const auto v1 = Vector2f{ cdt.vertices[_v1].x, cdt.vertices[_v1].y } * 0.1f;
-            const auto v2 = Vector2f{ cdt.vertices[_v2].x, cdt.vertices[_v2].y } * 0.1f;
+            const auto v1 = Vector2f{ cdt.vertices[_v1].x, cdt.vertices[_v1].y };
+            const auto v2 = Vector2f{ cdt.vertices[_v2].x, cdt.vertices[_v2].y };
             ns.push_back(Mesh::Edge{
                 tri.neighbors[2],
                 v1 + (v2 - v1) / 2,
@@ -251,8 +247,6 @@ Mesh generate_delauney(
 
         mesh.edges.push_back(ns);
     }
-
-    BENCH_STEP("data extraction");
 
     return mesh;
 }

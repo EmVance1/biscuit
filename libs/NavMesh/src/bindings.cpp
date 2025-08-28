@@ -64,6 +64,7 @@ struct navMesh { nav::Mesh impl; };
 navMesh* navMesh_createFromFile(const char* filename, float scale) {
     navMesh* result = (navMesh*)malloc(sizeof(navMesh));
     if (!result) { return NULL; }
+    new(&result->impl) nav::Mesh();
     result->impl = nav::Mesh::read_file(filename, scale);
     return result;
 }
@@ -73,6 +74,7 @@ void navMesh_writeToFile(const navMesh* self, const char* filename, float scale)
 }
 
 void navMesh_free(const navMesh* self) {
+    self->impl.~Mesh();
     free((navMesh*)self);
 }
 
@@ -109,6 +111,7 @@ navMesh* navMesh_createFromGrid(
 {
     navMesh* result = (navMesh*)malloc(sizeof(navMesh));
     if (!result) { return NULL; }
+    new(&result->impl) nav::Mesh();
     result->impl = nav::generate_delauney(grid, width, height, stride, index, (nav::Method)method, epsilon);
     return result;
 }

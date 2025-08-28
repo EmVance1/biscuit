@@ -195,49 +195,13 @@ std::vector<Polygon> floodfill(const uint8_t* data, size_t width, size_t height,
 std::vector<Polygon> floodfill(const u8* data, size_t width, size_t height, size_t stride, size_t index) {
     auto result = EdgeMap();
 
+    printf("floodfilling\n");
+
     for (usize i = 0; i < width * height; i++) {
         const isize x = i % width;
         const isize y = i / width;
 
         if (!data[(y * width + x) * stride + index]) {
-            /*
-            if (y == 0               || data[((y-1) * width + x) * stride + index]) {
-                const auto it = result.find(Vector2i{ (i32)x*10, (i32)y*10 });
-                if (it != result.end() && it->second.y == y*10) {
-                    const auto v = it->second;
-                    result.erase(it);
-                    result.emplace(Vector2i{ (i32)x*10 + 10, (i32)y*10 }, v);
-                } else {
-                    result.emplace(Vector2i{ (i32)x*10 + 10, (i32)y*10 }, Vector2i{ (i32)x*10,      (i32)y*10 });
-                }
-            }
-            if (x == 0               || data[(y * width + (x-1)) * stride + index]) {
-                const auto it = result.find(Vector2i{ (i32)x*10, (i32)y*10 - 10 });
-                if (it != result.end() && it->second.x == x*10) {
-                    it->second = Vector2i{ (i32)x*10, (i32)y*10 + 10 };
-                } else {
-                    result.emplace(Vector2i{ (i32)x*10, (i32)y*10 }, Vector2i{ (i32)x*10, (i32)y*10 + 10 });
-                }
-            }
-            if (y == (isize)height-1 || data[((y+1) * width + x) * stride + index]) {
-                const auto it = result.find(Vector2i{ (i32)x*10 - 10, (i32)y*10 + 10 });
-                if (it != result.end() && it->second.y == y*10 + 10) {
-                    it->second = Vector2i{ (i32)x*10 + 10, (i32)y*10 + 10 };
-                } else {
-                    result.emplace(Vector2i{ (i32)x*10, (i32)y*10 + 10 }, Vector2i{ (i32)x*10 + 10, (i32)y*10 + 10 });
-                }
-            }
-            if (x == (isize)width-1  || data[(y * width + (x+1)) * stride + index]) {
-                const auto it = result.find(Vector2i{ (i32)x*10 + 10, (i32)y*10 });
-                if (it != result.end() && it->second.x == x*10 + 10) {
-                    const auto v = it->second;
-                    result.erase(it);
-                    result.emplace(Vector2i{ (i32)x*10 + 10, (i32)y*10 + 10 }, v);
-                } else {
-                    result.emplace(Vector2i{ (i32)x*10 + 10, (i32)y*10 + 10 }, Vector2i{ (i32)x*10 + 10, (i32)y*10 });
-                }
-            }
-            */
             if (y == 0               || data[((y-1) * width + x) * stride + index]) {
                 result.emplace(Vector2i{ (i32)x*10 + 10, (i32)y*10 },      Vector2i{ (i32)x*10,      (i32)y*10 });
             }
@@ -253,7 +217,7 @@ std::vector<Polygon> floodfill(const u8* data, size_t width, size_t height, size
         }
     }
 
-    // std::cout << "==============" << result.size() << "\n";
+    printf("concating\n");
 
     return concat_edges(result);
 }
@@ -274,44 +238,6 @@ std::vector<Polygon> floodfill_threaded(const u8* data, size_t width, size_t hei
             const isize x = j % width;
             const isize y = j / width;
             if (!data[(y * width + x) * stride + index]) {
-                /*
-                if (y == 0               || data[((y-1) * width + x) * stride + index]) {
-                    const auto it = res.find(Vector2i{ (i32)x*10, (i32)y*10 });
-                    if (it != res.end() && it->second.y == y*10) {
-                        const auto v = it->second;
-                        res.erase(it);
-                        res.emplace(Vector2i{ (i32)x*10 + 10, (i32)y*10 }, v);
-                    } else {
-                        res.emplace(Vector2i{ (i32)x*10 + 10, (i32)y*10 }, Vector2i{ (i32)x*10,      (i32)y*10 });
-                    }
-                }
-                if (x == 0               || data[(y * width + (x-1)) * stride + index]) {
-                    const auto it = res.find(Vector2i{ (i32)x*10, (i32)y*10 - 10 });
-                    if (it != res.end() && it->second == Vector2i{ (i32)x*10, (i32)y*10 }) {
-                        it->second = Vector2i{ (i32)x*10, (i32)y*10 + 10 };
-                    } else {
-                        res.emplace(Vector2i{ (i32)x*10, (i32)y*10 }, Vector2i{ (i32)x*10, (i32)y*10 + 10 });
-                    }
-                }
-                if (y == (isize)height-1 || data[((y+1) * width + x) * stride + index]) {
-                    const auto it = res.find(Vector2i{ (i32)x*10 - 10, (i32)y*10 + 10 });
-                    if (it != res.end() && it->second == Vector2i{ (i32)x*10, (i32)y*10 + 10 }) {
-                        it->second = Vector2i{ (i32)x*10 + 10, (i32)y*10 + 10 };
-                    } else {
-                        res.emplace(Vector2i{ (i32)x*10, (i32)y*10 + 10 }, Vector2i{ (i32)x*10 + 10, (i32)y*10 + 10 });
-                    }
-                }
-                if (x == (isize)width-1  || data[(y * width + (x+1)) * stride + index]) {
-                    const auto it = res.find(Vector2i{ (i32)x*10 + 10, (i32)y*10 });
-                    if (it != res.end() && it->second.x == x*10 + 10) {
-                        const auto v = it->second;
-                        res.erase(it);
-                        res.emplace(Vector2i{ (i32)x*10 + 10, (i32)y*10 + 10 }, v);
-                    } else {
-                        res.emplace(Vector2i{ (i32)x*10 + 10, (i32)y*10 + 10 }, Vector2i{ (i32)x*10 + 10, (i32)y*10 });
-                    }
-                }
-                */
                 if (y == 0               || data[((y-1) * width + x) * stride + index]) {
                     res.emplace(Vector2i{ (i32)x*10 + 10, (i32)y*10 },      Vector2i{ (i32)x*10,      (i32)y*10 });
                 }
@@ -334,8 +260,6 @@ std::vector<Polygon> floodfill_threaded(const u8* data, size_t width, size_t hei
     for (const auto& m : future.get()) {
         result.insert(m.begin(), m.end());
     }
-
-    // std::cout << "==============" << result.size() << "\n";
 
     return concat_edges(result);
 }
