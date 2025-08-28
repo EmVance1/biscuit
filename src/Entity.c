@@ -92,17 +92,17 @@ void Entity_move(Entity* entity) {
     }
 }
 
-void Entity_addVelocity(Entity* entity, sfVector2f acceleration) {  
+void Entity_addVelocity(Entity* entity, sfVector2f acceleration) {
     float prevSpeed = sfVec2f_len(entity->velocity);
     entity->velocity = sfVec2f_add(entity->velocity,acceleration);
 
     if (sfVec2f_len(entity->velocity) > entity->speed) {
         // moved from slower into greater than max speed
         if (prevSpeed < entity->speed) {
-            entity->velocity = sfVec2f_scale(entity->velocity,entity->speed/sfVec2f_len(entity->velocity));
+            entity->velocity = sfVec2f_scale(entity->velocity, entity->speed*Clock_deltaTime()/sfVec2f_len(entity->velocity));
         // was already above max speed, alter direction and keep speed (because of dash)
         } else {
-            entity->velocity = sfVec2f_scale(entity->velocity,prevSpeed/sfVec2f_len(entity->velocity));
+            entity->velocity = sfVec2f_scale(entity->velocity, prevSpeed*Clock_deltaTime()/sfVec2f_len(entity->velocity));
         }
     }
 }
