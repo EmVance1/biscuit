@@ -17,6 +17,13 @@ struct Mesh {
     std::vector<Triangle> triangles;
     std::vector<std::vector<Edge>> edges;
 
+    Mesh() = default;
+    Mesh(const Mesh& mesh);
+    Mesh(Mesh&& mesh);
+
+    Mesh& operator=(const Mesh& mesh);
+    Mesh& operator=(Mesh&& mesh);
+
     void write_file(const std::filesystem::path& filename, f32 scale = 1.f) const;
     static Mesh read_file(const std::filesystem::path& filename, f32 scale = 1.f);
 

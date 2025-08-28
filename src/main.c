@@ -56,7 +56,18 @@ int main() {
     sfuTextureAtlas* tileatlas = sfuTextureAtlas_createFromFile("res/textures/tilesheet.png", (sfVector2u){ 8, 8 });
     sfuTileMap* sandbox = sandboxMap(tileatlas);
 
-    const navMesh* navmesh = navMesh_createFromGrid(NULL, 20, 20, 1, 0, GEN_METHOD_FLOODFILL, 0.01f);
+    uint8_t meshdata[] = {
+        1, 1, 1, 1,  1, 1, 1, 1,
+        1, 0, 0, 0,  0, 0, 0, 1,
+        1, 0, 0, 0,  0, 0, 0, 1,
+        1, 0, 0, 0,  0, 0, 0, 1,
+
+        1, 0, 0, 0,  0, 0, 0, 1,
+        1, 0, 0, 0,  0, 0, 0, 1,
+        1, 0, 0, 0,  0, 0, 0, 1,
+        1, 1, 1, 1,  1, 1, 1, 1,
+    };
+    const navMesh* navmesh = navMesh_createFromGrid(meshdata, 8, 8, 1, 0, GEN_METHOD_FLOODFILL, 0.01f);
     PathTracker* tracker = PathTracker_create(navmesh);
 
     Game_Init();
