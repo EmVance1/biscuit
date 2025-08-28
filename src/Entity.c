@@ -77,6 +77,7 @@ void Entity_offset(Entity* entity, sfVector2f dir) {
     entity->rectBound.top += offset.y;
 }
 
+
 // Accounts for delta time
 void Entity_move(Entity* entity) {
     if (Entity_isEnemy(entity)) {
@@ -107,6 +108,7 @@ void Entity_addVelocity(Entity* entity, sfVector2f acceleration) {
     }
 }
 
+
 void Entity_setVelocity(Entity* entity, sfVector2f velocity) {
     entity->velocity = velocity;
 }
@@ -122,6 +124,7 @@ void Entity_startDash(Entity* entity) {
     }
 }
 
+
 void Entity_damage(Entity* entity, float damage) {
     entity->health -= damage;
     Cooldown_reset(&entity->damageAnim);
@@ -130,11 +133,13 @@ void Entity_damage(Entity* entity, float damage) {
     }
 }
 
+
 void Entity_updateVelocity(Entity* entity) {
     // decelerate entity by 10% of current velocity
     sfVector2f oppositeVel = sfVec2f_scale(entity->velocity, -0.1f);
     Entity_setVelocity(entity, oppositeVel);
 }
+
 
 void Entity_render(sfRenderWindow* window, Entity *entity) {
     sfRectangleShape* rect = sfRectangleShape_create();
@@ -143,7 +148,7 @@ void Entity_render(sfRenderWindow* window, Entity *entity) {
     sfRectangleShape_setSize(rect, (sfVector2f) {entity->rectBound.width, entity->rectBound.height});
 
     if (entity->health <= 0) {
-       return; 
+       return;
     } else if (Cooldown_get(&entity->damageAnim) > 0) {
         sfRectangleShape_setFillColor(rect, sfRed);
     } else {
@@ -170,7 +175,6 @@ void Cooldown_reset(Cooldown* cd) {
     sfClock_restart(cd->clock);
 }
 
-
 float Cooldown_get(const Cooldown* cd) {
     return cd->cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cd->clock));
 }
@@ -179,4 +183,3 @@ void Cooldown_set(Cooldown* cd, float time) {
     cd->cooldownLength = time;
     sfClock_restart(cd->clock);
 }
-

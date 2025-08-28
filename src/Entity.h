@@ -29,13 +29,15 @@ typedef struct Entity {
     float health;
     float meleeRange;
     float meleeDamage;
+    float stunRange;
+    float stunDuration;
 
     // ability cooldowns
     Cooldown dashCooldown;
     Cooldown attackCooldown;
     Cooldown attackAnim;
     Cooldown damageAnim;
-
+    Cooldown stunEffect;
     float attackStartAngle;
 
     PathTracker* pathtracker;

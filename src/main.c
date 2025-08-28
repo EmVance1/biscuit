@@ -55,6 +55,7 @@ int main() {
     PathTracker* tracker = PathTracker_create(sandbox.navmesh);
 
     Game_Init();
+    Game_SetMeshPolygons(sandbox.colliders);
 
     while (sfRenderWindow_isOpen(window)) {
         Clock_setFrame();

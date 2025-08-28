@@ -1,9 +1,10 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "PlayerCollision.h"
 #include "Entity.h"
 
 
-bool rectLineCollision(sfFloatRect rect, sfVector2f v0, sfVector2f v1) {
+bool Collision_RectLine(sfFloatRect rect, sfVector2f v0, sfVector2f v1) {
     if (v0.y == v1.y) {
         float left = v0.x < v1.x ? v0.x : v1.x;
         float right = v0.x < v1.x ? v1.x : v0.x;
@@ -22,13 +23,13 @@ bool rectLineCollision(sfFloatRect rect, sfVector2f v0, sfVector2f v1) {
         if ((rect.top < top && rect.top+rect.height < top) || (rect.top > bottom && rect.top+rect.height > bottom)) {
             return false;
         }
-        // left edge is left and right edge is right of line
+  // left edge is left and right edge is right of line
         return (rect.left < left && left < rect.left+rect.width);
     }
     return false;
 }
 
-sfVector2f resolveRectLineCollision(sfFloatRect rect, sfVector2f* v, int lines) {
+sfVector2f Collision_ResolveRectLine(sfFloatRect rect, sfVector2f* v, int lines) {
     // collect distance to offset from rect and line
     float* lineOffsets = (float*)calloc(lines, sizeof(float));
     sfVector2f* offsetDir = (sfVector2f*)calloc(lines, sizeof(sfVector2f));
@@ -67,21 +68,21 @@ sfVector2f resolveRectLineCollision(sfFloatRect rect, sfVector2f* v, int lines) 
     return offsetVector;
 }
 
-bool handlePlayerWallCollision(Entity* player, sfVector2f* vertices, int numVertices) {
+bool Collision_HandlePlayerWall(Entity* player, sfVector2f* vertices, int numVertices) {
     sfFloatRect rectBound = player->rectBound;
     sfVector2f* collisionVertices = (sfVector2f*)malloc(sizeof(sfVector2f)* numVertices *2);
     int lines = 0;
     for (int i=0; i<numVertices-1; i++) {
         sfVector2f v0 = vertices[i];
         sfVector2f v1 = vertices[i+1];
-        if (rectLineCollision(rectBound, v0, v1)) {
+        if (Collision_RectLine(rectBound, v0, v1)) {
             collisionVertices[2*lines+0] = v0;
             collisionVertices[2*lines+1] = v1;
             lines++;
         }
     }
     if (lines > 0) {
-        sfVector2f offset = resolveRectLineCollision(rectBound, collisionVertices, lines);
+        sfVector2f offset = Collision_ResolveRectLine(rectBound, collisionVertices, lines);
         Entity_offset(player, offset);
         if (offset.x == 0 && offset.y == 0) return false;
     } else return false;
@@ -89,4 +90,41 @@ bool handlePlayerWallCollision(Entity* player, sfVector2f* vertices, int numVert
     free(collisionVertices);
 
     return true;
+}
+
+bool Collision_HandlePlayerNavmesh(Entity* player, navPolygonArray* meshPolys) {
+    sfFloatRect rectBound = player->rectBound;
+    for (int k=0; k<(int) meshPolys->count; k++) {
+        int numVertices = meshPolys->polys[k]->count;
+        int iters = meshPolys->polys[k]->loop ? numVertices : numVertices-1; // In case of loop, have to go one line further than numVertices
+        sfVector2f* collisionVertices = (sfVector2f*)malloc(sizeof(sfVector2f)* (numVertices+1) *2);
+        int lines = 0;
+
+        for (int i=0; i<iters; i++) {
+            navVector2f nav0 = meshPolys->polys[k]->points[i];
+            navVector2f nav1 = meshPolys->polys[k]->points[(i+1)%numVertices];
+
+            sfVector2f v0 = (sfVector2f) {nav0.x*16,nav0.y*16};
+            sfVector2f v1 = (sfVector2f) {nav1.x*16,nav1.y*16};
+
+            if (Collision_RectLine(rectBound, v0, v1)) {
+                collisionVertices[2*lines+0] = v0;
+                collisionVertices[2*lines+1] = v1;
+                lines++;
+            }
+        }
+        if (lines > 0) {
+            sfVector2f offset = Collision_ResolveRectLine(rectBound, collisionVertices, lines);
+            Entity_offset(player, offset);
+            if (offset.x == 0 && offset.y == 0) return false;
+        } else {
+            free(collisionVertices);
+            return false;
+        }
+
+        free(collisionVertices);
+
+        return true;
+    }
+    return false;
 }
