@@ -13,22 +13,17 @@ namespace nav {
 
 Mesh::Mesh(const Mesh& other)
     : vertices(other.vertices), triangles(other.triangles), edges(other.edges)
-{
-    printf("copy construct\n");
-}
+{}
 
 Mesh::Mesh(Mesh&& other)
     : vertices(std::move(other.vertices)), triangles(std::move(other.triangles)), edges(std::move(other.edges))
-{
-    printf("move construct\n");
-}
+{}
 
 
 Mesh& Mesh::operator=(const Mesh& other) {
     vertices  = other.vertices;
     triangles = other.triangles;
     edges     = other.edges;
-    printf("assign copy\n");
     return *this;
 }
 
@@ -36,7 +31,6 @@ Mesh& Mesh::operator=(Mesh&& other) {
     vertices  = std::move(other.vertices);
     triangles = std::move(other.triangles);
     edges     = std::move(other.edges);
-    printf("assign move\n");
     return *this;
 }
 

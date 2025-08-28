@@ -2,7 +2,7 @@
 package = "NavMesh"
 version = "0.1.0"
 lang = "C++17"
-binding = "C99"
+interface = "C99"
 
 include = [ "src", "include" ]
 include-pub = "include"
