@@ -6,11 +6,11 @@
 static bool* grid_createFromTilemap(const sfVector2u* indices, sfVector2u size);
 
 
-World World_createFromIndices(const uint32_t* indices, const sfuTextureAtlas* atlas) {
-    bool* grid = grid_createFromTilemap((sfVector2u*)indices, (sfVector2u){ 8, 8 });
-    navMesh* navmesh = navMesh_createFromGrid((uint8_t*)grid, 8, 8, 1, 0, GEN_METHOD_FLOODFILL, 0.001f);
+World World_createFromIndices(const uint32_t* indices, sfVector2u size, const sfuTextureAtlas* atlas) {
+    bool* grid = grid_createFromTilemap((sfVector2u*)indices, size);
+    navMesh* navmesh = navMesh_createFromGrid((uint8_t*)grid, size.x, size.y, 1, 0, GEN_METHOD_FLOODFILL, 0.001f);
     return (World){
-        .background = sfuTileMap_createFromIndices(atlas, indices, (sfVector2u){ 8, 8 }),
+        .background = sfuTileMap_createFromIndices(atlas, indices, size),
         .navmesh = navmesh,
         .colliders = navMesh_clonePolygons(navmesh),
     };

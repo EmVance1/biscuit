@@ -11,7 +11,7 @@ typedef struct World {
 } World;
 
 
-World World_createFromIndices(const uint32_t* indices, const sfuTextureAtlas* atlas);
+World World_createFromIndices(const uint32_t* indices, sfVector2u size, const sfuTextureAtlas* atlas);
 
 void World_free(const World* self);
 

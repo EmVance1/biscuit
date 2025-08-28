@@ -29,10 +29,10 @@ void Game_Init() {
         .health = 100,
         .meleeRange = 25.0f,
         .meleeDamage = 40.0f,
-        .dashCooldown = Cooldown_Create(0.5f),
-        .attackCooldown = Cooldown_Create(0.3f),
-        .attackAnim = Cooldown_Create(0.2f),
-        .damageAnim = Cooldown_Create(0.05f),
+        .dashCooldown = Cooldown_create(0.5f),
+        .attackCooldown = Cooldown_create(0.3f),
+        .attackAnim = Cooldown_create(0.2f),
+        .damageAnim = Cooldown_create(0.05f),
     };
 
     numEnemies = 2;
@@ -49,10 +49,10 @@ void Game_Init() {
         .health = 100,
         .meleeRange = 70.0f,
         .meleeDamage = 20.0f,
-        .dashCooldown = Cooldown_Create(0.5f),
-        .attackCooldown = Cooldown_Create(1.0f),
-        .attackAnim = Cooldown_Create(0.2f),
-        .damageAnim = Cooldown_Create(0.05f),
+        .dashCooldown = Cooldown_create(0.5f),
+        .attackCooldown = Cooldown_create(1.0f),
+        .attackAnim = Cooldown_create(0.2f),
+        .damageAnim = Cooldown_create(0.05f),
     };
     enemies[1] = (Entity) {
         .position= (sfVector2f) {4*16,7*16},
@@ -66,10 +66,10 @@ void Game_Init() {
         .health = 100,
         .meleeRange = 70.0f,
         .meleeDamage = 20.0f,
-        .dashCooldown = Cooldown_Create(0.5f),
-        .attackCooldown = Cooldown_Create(1.0f),
-        .attackAnim = Cooldown_Create(0.2f),
-        .damageAnim = Cooldown_Create(0.05f),
+        .dashCooldown = Cooldown_create(0.5f),
+        .attackCooldown = Cooldown_create(1.0f),
+        .attackAnim = Cooldown_create(0.2f),
+        .damageAnim = Cooldown_create(0.05f),
     };
 }
 
@@ -97,8 +97,8 @@ void attackMelee() {
         return;
 
     // start attack
-    Cooldown_Reset(player.attackAnim);
-    Cooldown_Reset(player.attackCooldown);
+    Cooldown_reset(&player.attackAnim);
+    Cooldown_reset(&player.attackCooldown);
     player.attackStartAngle = 180.0f*atan2f(player.lastDir.y,player.lastDir.x)/PI;
 
     // find enemies in range
@@ -125,8 +125,8 @@ float lerp(float a, float b, float t) {
 void animateSword(sfRenderWindow* window) {
     sfRenderStates renderState = sfRenderStates_default();
 
-    if (Cooldown_Get(player.attackAnim) >= 0) {
-        float t = 1 - Cooldown_Get(player.attackAnim)/player.attackAnim.cooldownLength;
+    if (Cooldown_get(&player.attackAnim) >= 0) {
+        float t = 1 - Cooldown_get(&player.attackAnim)/player.attackAnim.cooldownLength;
         float angle = lerp(player.attackStartAngle-90.0f, player.attackStartAngle+90.0f, t);
         sfRectangleShape* swordRect = sfRectangleShape_create();
         sfRectangleShape_setOrigin(swordRect, (sfVector2f) {0.0f,2.5f});

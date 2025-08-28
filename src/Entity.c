@@ -1,7 +1,67 @@
 #include "Entity.h"
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "clock.h"
+#include "pathtracker.h"
+
+
+Entity Entity_createPlayer(sfVector2f position) {
+    const sfVector2f size = (sfVector2f){ 10, 10 };
+
+    return (Entity){
+        .is_alive = true,
+        .position  = position,
+        .velocity  = (sfVector2f){ 0, 0 },
+        .lastDir   = (sfVector2f){ 1, 0 },
+        .rectBound = (sfFloatRect){position.x, position.y, size.x, size.y },
+        .fillCol = sfBlue,
+        .speed = 90.0f,
+        .acc = 10000.0f,
+        .dashSpeed = 600.0f,
+        .health = 100,
+        .meleeRange  = 25.0f,
+        .meleeDamage = 40.0f,
+        .dashCooldown   = Cooldown_create(0.5f),
+        .attackCooldown = Cooldown_create(0.3f),
+        .attackAnim     = Cooldown_create(0.2f),
+        .damageAnim     = Cooldown_create(0.05f),
+        .pathtracker = NULL,
+    };
+}
+
+Entity Entity_createEnemy(sfVector2f position, sfColor color, const navMesh* navmesh) {
+    const sfVector2f size = (sfVector2f){ 10, 10 };
+
+    return (Entity){
+        .is_alive = true,
+        .position  = position,
+        .velocity  = (sfVector2f){ 0, 0 },
+        .lastDir   = (sfVector2f){ 1, 0 },
+        .rectBound = (sfFloatRect){position.x, position.y, size.x, size.y },
+        .fillCol = color,
+        .speed = 90.0f,
+        .acc = 10000.0f,
+        .dashSpeed = 600.0f,
+        .health = 100,
+        .meleeRange  = 70.0f,
+        .meleeDamage = 20.0f,
+        .dashCooldown   = Cooldown_create(0.5f),
+        .attackCooldown = Cooldown_create(1.0f),
+        .attackAnim     = Cooldown_create(0.2f),
+        .damageAnim     = Cooldown_create(0.05f),
+        .pathtracker = PathTracker_create(navmesh),
+    };
+}
+
+void Entity_kill(Entity* entity) {
+    entity->is_alive = false;
+    free(entity->pathtracker);
+    Cooldown_free(&entity->dashCooldown);
+    Cooldown_free(&entity->attackCooldown);
+    Cooldown_free(&entity->attackAnim);
+    Cooldown_free(&entity->damageAnim);
+}
 
 
 // Does not account for delta time
@@ -42,14 +102,10 @@ void Entity_setVelocity(Entity* entity, sfVector2f velocity) {
     entity->velocity = velocity;
 }
 
-static float getCooldown(Cooldown cooldown) {
-    return cooldown.cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cooldown.clock));
-}
-
 void Entity_startDash(Entity* entity) {
-    if (getCooldown(entity->dashCooldown) <= 0.0f) {
+    if (Cooldown_get(&entity->dashCooldown) <= 0.0f) {
         sfVector2f velocity = entity->velocity;
-        if (sfVec2f_len(velocity) == 0) return;
+        if (fabsf(sfVec2f_len(velocity)) < 0.001f) return;
         velocity = sfVec2f_norm(velocity);
         velocity = sfVec2f_scale(velocity, entity->dashSpeed);
         Entity_setVelocity(entity, velocity);
@@ -59,11 +115,8 @@ void Entity_startDash(Entity* entity) {
 
 void Entity_damage(Entity* entity, float damage) {
     entity->health -= damage;
-    Cooldown_Reset(entity->damageAnim);
+    Cooldown_reset(&entity->damageAnim);
     if (entity->health <= 0) Entity_kill(entity);
-}
-
-void Entity_kill(Entity* entity) {
 }
 
 void Entity_updateVelocity(Entity* entity) {
@@ -80,7 +133,7 @@ void Entity_render(sfRenderWindow* window, Entity *entity) {
 
     if (entity->health <= 0) {
        return; 
-    } else if (Cooldown_Get(entity->damageAnim) > 0) {
+    } else if (Cooldown_get(&entity->damageAnim) > 0) {
         sfRectangleShape_setFillColor(rect, sfRed);
     } else {
         sfRectangleShape_setFillColor(rect, entity->fillCol);
@@ -89,23 +142,30 @@ void Entity_render(sfRenderWindow* window, Entity *entity) {
     sfRenderWindow_drawRectangleShape(window, rect, &renderState);
 }
 
-Cooldown Cooldown_Default() {
-    return (Cooldown) {sfClock_create(), 1.0f};
+
+Cooldown Cooldown_create(float time) {
+    return (Cooldown){ sfClock_create(), time };
 }
 
-float Cooldown_Get(Cooldown cd) {
-    return cd.cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cd.clock));
+Cooldown Cooldown_default() {
+    return Cooldown_create(1.f);
 }
 
-void Cooldown_Set(Cooldown cd, float time) {
-    cd.cooldownLength = time;
-    sfClock_restart(cd.clock);
+void Cooldown_free(const Cooldown* self) {
+    sfClock_destroy(self->clock);
 }
 
-void Cooldown_Reset(Cooldown cd) {
-    sfClock_restart(cd.clock);
+void Cooldown_reset(Cooldown* cd) {
+    sfClock_restart(cd->clock);
 }
 
-Cooldown Cooldown_Create(float time) {
-    return (Cooldown) {sfClock_create(), time};
+
+float Cooldown_get(const Cooldown* cd) {
+    return cd->cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cd->clock));
 }
+
+void Cooldown_set(Cooldown* cd, float time) {
+    cd->cooldownLength = time;
+    sfClock_restart(cd->clock);
+}
+
