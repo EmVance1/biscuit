@@ -17,6 +17,8 @@ struct Mesh {
     std::vector<Triangle> triangles;
     std::vector<std::vector<Edge>> edges;
 
+    std::vector<std::vector<Vector2i>> polygons;
+
     Mesh() = default;
     Mesh(const Mesh& mesh);
     Mesh(Mesh&& mesh);

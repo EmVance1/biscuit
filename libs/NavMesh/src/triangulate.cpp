@@ -203,6 +203,7 @@ Mesh generate_delauney(
     mesh.vertices.reserve(cdt.vertices.size());
     mesh.triangles.reserve(cdt.triangles.size());
     mesh.edges.reserve(cdt.triangles.size());
+    mesh.polygons = std::move(polys);
 
     for (const auto& vert : cdt.vertices) {
         mesh.vertices.push_back(Vector2f{ vert.x, vert.y });

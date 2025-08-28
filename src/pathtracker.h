@@ -5,7 +5,7 @@
 
 
 typedef struct navMesh navMesh;
-typedef struct navPath navPath;
+typedef struct navVertexChain navVertexChain;
 
 
 typedef struct PathTracker PathTracker;
@@ -26,7 +26,7 @@ sfVector2f PathTracker_getPosition(const self*);
 bool       PathTracker_setTargetPosition(self*, sfVector2f goal);
 sfVector2f PathTracker_getTargetPosition(const self*);
 
-const navPath* PathTracker_getActivePath(const self*);
+const navVertexChain* PathTracker_getActivePath(const self*);
 float PathTracker_getActivePathLength(const self*);
 
 size_t PathTracker_getCurrentIndex(const self*);
