@@ -6,11 +6,5 @@
 void Game_Init();
 void Game_Update();
 void Game_Render(sfRenderWindow* window);
-
 void Game_Destroy();
-
-void attackMelee();
-
-void animateSword(sfRenderWindow* window);
-
 #endif

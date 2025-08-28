@@ -4,6 +4,7 @@
 #include "Entity.h"
 #include "clock.h"
 #include <stdio.h>
+#include <stdbool.h>
 #include <math.h>
 #include <malloc.h>
 
@@ -14,7 +15,15 @@ static Entity* enemies;
 static int numEnemies;
 
 
+static float lerp(float a, float b, float t);
 static void processKeyClicked();
+static void animateSword(sfRenderWindow* window);
+static void deceleratePlayer(Entity* _player);
+static void attackMelee();
+static void stunArea();
+static void castFireball();
+static void caseHazardCloud();
+
 
 void Game_Init() {
     player = (Entity) {
@@ -73,42 +82,12 @@ void Game_Init() {
     };
 }
 
-// decelerates player by 10% of current velocity
-static void deceleratePlayer(Entity* _player) {
-    if (fabsf(sfVec2f_len(_player->velocity)) > 0.1) {
-        Entity_setVelocity(_player, sfVec2f_scale(_player->velocity, 0.95f));
-    } else {
-        Entity_setVelocity(_player, (sfVector2f) {0,0});
-    }
-}
-
-static float getCooldown(Cooldown cooldown) {
-    return cooldown.cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cooldown.clock));
-}
-
 void Game_Update() {
     processKeyClicked();
     deceleratePlayer(&player);
     Entity_move(&player);
 }
 
-void attackMelee() {
-    if (getCooldown(player.attackCooldown) > 0)
-        return;
-
-    // start attack
-    Cooldown_Reset(player.attackAnim);
-    Cooldown_Reset(player.attackCooldown);
-    player.attackStartAngle = 180.0f*atan2f(player.lastDir.y,player.lastDir.x)/PI;
-
-    // find enemies in range
-    for (int i=0; i<numEnemies; i++) {
-        sfVector2f ab = sfVec2f_sub(player.position,enemies[i].position);
-        if (sfVec2f_len(ab) <= player.meleeRange+enemies[i].rectBound.width/2.0f) {
-            Entity_damage(&enemies[i],player.meleeDamage);
-        }
-    }
-}
 
 void Game_Render(sfRenderWindow* window) {
     animateSword(window);
@@ -118,31 +97,15 @@ void Game_Render(sfRenderWindow* window) {
     }
 }
 
-float lerp(float a, float b, float t) {
-    return a+(b-a)*t;
-}
-
-void animateSword(sfRenderWindow* window) {
-    sfRenderStates renderState = sfRenderStates_default();
-
-    if (Cooldown_Get(player.attackAnim) >= 0) {
-        float t = 1 - Cooldown_Get(player.attackAnim)/player.attackAnim.cooldownLength;
-        float angle = lerp(player.attackStartAngle-90.0f, player.attackStartAngle+90.0f, t);
-        sfRectangleShape* swordRect = sfRectangleShape_create();
-        sfRectangleShape_setOrigin(swordRect, (sfVector2f) {0.0f,2.5f});
-        sfRectangleShape_setPosition(swordRect, player.position);
-        sfRectangleShape_setSize(swordRect, (sfVector2f) {player.meleeRange, 5.0f});
-        sfRectangleShape_setRotation(swordRect, angle);
-        sfRectangleShape_setFillColor(swordRect, sfMagenta);
-
-        sfRenderWindow_drawRectangleShape(window, swordRect, &renderState);
-    }
-}
 
 void Game_Destroy() {
     free(enemies);
 }
 
+
+/*
+ * Static functions
+*/
 
 static void processKeyClicked() {
     float dt = Clock_deltaTime();
@@ -166,3 +129,67 @@ static void processKeyClicked() {
     }
 }
 
+
+// decelerates player by 10% of current velocity
+static void deceleratePlayer(Entity* _player) {
+    if (fabsf(sfVec2f_len(_player->velocity)) > 0.1) {
+        Entity_setVelocity(_player, sfVec2f_scale(_player->velocity, 0.95f));
+    } else {
+        Entity_setVelocity(_player, (sfVector2f) {0,0});
+    }
+}
+
+
+static void attackMelee() {
+    if (Cooldown_Get(player.attackCooldown) > 0)
+        return;
+
+    // start attack
+    Cooldown_Reset(player.attackAnim);
+    Cooldown_Reset(player.attackCooldown);
+    player.attackStartAngle = 180.0f*atan2f(player.lastDir.y,player.lastDir.x)/PI;
+
+    // find enemies in range
+    for (int i=0; i<numEnemies; i++) {
+        sfVector2f ab = sfVec2f_sub(player.position,enemies[i].position);
+        if (sfVec2f_len(ab) <= player.meleeRange+enemies[i].rectBound.width/2.0f) {
+            Entity_damage(&enemies[i],player.meleeDamage);
+        }
+    }
+}
+
+
+static float lerp(float a, float b, float t) {
+    return a+(b-a)*t;
+}
+
+
+static void animateSword(sfRenderWindow* window) {
+    sfRenderStates renderState = sfRenderStates_default();
+
+    if (Cooldown_Get(player.attackAnim) >= 0) {
+        float t = 1 - Cooldown_Get(player.attackAnim)/player.attackAnim.cooldownLength;
+        float angle = lerp(player.attackStartAngle-90.0f, player.attackStartAngle+90.0f, t);
+        sfRectangleShape* swordRect = sfRectangleShape_create();
+        sfRectangleShape_setOrigin(swordRect, (sfVector2f) {0.0f,2.5f});
+        sfRectangleShape_setPosition(swordRect, player.position);
+        sfRectangleShape_setSize(swordRect, (sfVector2f) {player.meleeRange, 5.0f});
+        sfRectangleShape_setRotation(swordRect, angle);
+        sfRectangleShape_setFillColor(swordRect, sfMagenta);
+
+        sfRenderWindow_drawRectangleShape(window, swordRect, &renderState);
+    }
+}
+
+static bool entityInRange(Entity* first, Entity* second, float range) {
+   return sfVec2f_len(sfVec2f_sub(first->position,second->position)) <= range;
+}
+
+
+static void stunArea() {
+   for (int i=0; i<numEnemies; i++) {
+       if (entityInRange(&player, &enemies[i], player.stunRange)) {
+           Cooldown_Set(enemies[i].stunEffect,player.stunDuration);
+       }
+   }
+}
