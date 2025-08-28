@@ -4,8 +4,8 @@
 #include "Game.h"
 #include "atlas.h"
 #include "clock.h"
-#include "navmesh/c/mesh.h"
 #include "tilemap.h"
+#include "world.h"
 
 #include <navmesh/c/lib.h>
 #include "pathtracker.h"
@@ -17,13 +17,9 @@
 #endif
 
 
-sfVector2u tileFromIndex(uint32_t idx) {
-    return (sfVector2u){ .x = idx & 0b00000111, .y = idx & 0b00111000};
-}
 
-
-sfuTileMap* sandboxMap(const sfuTextureAtlas* atlas) {
-    static uint32_t map[] = {
+World sandboxMap(const sfuTextureAtlas* atlas) {
+    const static uint32_t map[] = {
         3, 0,  1, 2,  1, 2,  1, 2,  1, 2,  1, 2,  1, 2,  4, 0,
         2, 1,  0, 3,  1, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 1,
         2, 1,  0, 3,  1, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 1,
@@ -34,9 +30,8 @@ sfuTileMap* sandboxMap(const sfuTextureAtlas* atlas) {
         3, 1,  1, 0,  1, 0,  1, 0,  1, 0,  1, 0,  1, 0,  4, 1,
     };
 
-    return sfuTileMap_createFromIndices(atlas, (uint32_t*)map, (sfVector2u){ 8, 8 });
+    return World_createFromIndices(map, atlas);
 }
-
 
 
 int main() {
@@ -56,24 +51,9 @@ int main() {
     }
 
     sfuTextureAtlas* tileatlas = sfuTextureAtlas_createFromFile("res/textures/tilesheet.png", (sfVector2u){ 8, 8 });
-    sfuTileMap* sandbox = sandboxMap(tileatlas);
+    World sandbox = sandboxMap(tileatlas);
 
-    uint8_t meshdata[] = {
-        1, 1, 1, 1,  1, 1, 1, 1,
-        1, 0, 0, 0,  0, 0, 0, 1,
-        1, 0, 0, 0,  0, 0, 0, 1,
-        1, 0, 0, 0,  0, 0, 0, 1,
-
-        1, 0, 0, 0,  0, 0, 0, 1,
-        1, 0, 0, 0,  0, 0, 0, 1,
-        1, 0, 0, 0,  0, 0, 0, 1,
-        1, 1, 1, 1,  1, 1, 1, 1,
-    };
-    const navMesh* navmesh = navMesh_createFromGrid(meshdata, 8, 8, 1, 0, GEN_METHOD_FLOODFILL, 0.01f);
-    PathTracker* tracker = PathTracker_create(navmesh);
-
-    // EXAMPLE GET POLYGONS, ALLOCATES, MUST BE FREED
-    const navPolygonArray* mesh_polygons = navMesh_clonePolygons(navmesh);
+    PathTracker* tracker = PathTracker_create(sandbox.navmesh);
 
     Game_Init();
 
@@ -100,22 +80,18 @@ int main() {
         sfRenderWindow_clear(window, (sfColor){ 0, 0, 0, 255 });
         sfRenderWindow_setView(window, camera);
 
-        sfRenderWindow_drawTileMap(window, sandbox, NULL);
+        sfRenderWindow_drawTileMap(window, sandbox.background, NULL);
 
         Game_Render(window);
 
         sfRenderWindow_display(window);
     }
 
-    // LIKE THIS
-    navMesh_freePolygons(mesh_polygons);
-
     PathTracker_free(tracker);
-    navMesh_free(navmesh);
 
     Game_Destroy();
 
-    sfuTileMap_free(sandbox);
+    World_free(&sandbox);
     sfuTextureAtlas_free(tileatlas);
     sfView_destroy(camera);
     sfRenderWindow_destroy(window);
