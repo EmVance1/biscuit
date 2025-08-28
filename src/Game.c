@@ -18,6 +18,7 @@ static void processKeyClicked();
 
 void Game_Init() {
     player = (Entity) {
+        .is_alive = true,
         .position = (sfVector2f) {4*16,4*16},
         .velocity = (sfVector2f) {0,0},
         .lastDir = (sfVector2f) {1,0},
@@ -38,6 +39,7 @@ void Game_Init() {
     numEnemies = 2;
     enemies = (Entity*) malloc(sizeof(Entity)*numEnemies);
     enemies[0] = (Entity) {
+        .is_alive = true,
         .position = (sfVector2f) {6*15,3*16},
         .velocity = (sfVector2f) {0,0},
         .lastDir = (sfVector2f) {1,0},
@@ -55,6 +57,7 @@ void Game_Init() {
         .damageAnim = Cooldown_create(0.05f),
     };
     enemies[1] = (Entity) {
+        .is_alive = true,
         .position= (sfVector2f) {4*16,7*16},
         .velocity = (sfVector2f) {0,0},
         .lastDir = (sfVector2f) {1,0},
@@ -102,10 +105,12 @@ void attackMelee() {
     player.attackStartAngle = 180.0f*atan2f(player.lastDir.y,player.lastDir.x)/PI;
 
     // find enemies in range
-    for (int i=0; i<numEnemies; i++) {
-        sfVector2f ab = sfVec2f_sub(player.position,enemies[i].position);
-        if (sfVec2f_len(ab) <= player.meleeRange+enemies[i].rectBound.width/2.0f) {
-            Entity_damage(&enemies[i],player.meleeDamage);
+    for (int i = 0; i < numEnemies; i++) {
+        if (enemies[i].is_alive) {
+            sfVector2f ab = sfVec2f_sub(player.position,enemies[i].position);
+            if (sfVec2f_len(ab) <= player.meleeRange+enemies[i].rectBound.width/2.0f) {
+                Entity_damage(&enemies[i],player.meleeDamage);
+            }
         }
     }
 }
@@ -113,8 +118,10 @@ void attackMelee() {
 void Game_Render(sfRenderWindow* window) {
     animateSword(window);
     Entity_render(window, &player);
-    for (int i=0; i<numEnemies; i++) {
-        Entity_render(window, &enemies[i]);
+    for (int i = 0; i < numEnemies; i++) {
+        if (enemies[i].is_alive) {
+            Entity_render(window, &enemies[i]);
+        }
     }
 }
 

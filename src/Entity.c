@@ -54,6 +54,11 @@ Entity Entity_createEnemy(sfVector2f position, sfColor color, const navMesh* nav
     };
 }
 
+
+bool Entity_isEnemy(const Entity* entity) {
+    return entity->pathtracker != NULL;
+}
+
 void Entity_kill(Entity* entity) {
     entity->is_alive = false;
     free(entity->pathtracker);
@@ -74,12 +79,16 @@ void Entity_offset(Entity* entity, sfVector2f dir) {
 
 // Accounts for delta time
 void Entity_move(Entity* entity) {
-    sfVector2f offset = sfVec2f_scale(entity->velocity,Clock_deltaTime());
-    entity->position = sfVec2f_add(entity->position, offset);
-    entity->rectBound.left += offset.x;
-    entity->rectBound.top += offset.y;
-    if (sfVec2f_len(entity->velocity) > 0.01f) {
-        entity->lastDir = sfVec2f_norm(entity->velocity);
+    if (Entity_isEnemy(entity)) {
+        PathTracker_progress(entity->pathtracker);
+    } else {
+        sfVector2f offset = sfVec2f_scale(entity->velocity,Clock_deltaTime());
+        entity->position = sfVec2f_add(entity->position, offset);
+        entity->rectBound.left += offset.x;
+        entity->rectBound.top += offset.y;
+        if (sfVec2f_len(entity->velocity) > 0.01f) {
+            entity->lastDir = sfVec2f_norm(entity->velocity);
+        }
     }
 }
 
@@ -116,7 +125,9 @@ void Entity_startDash(Entity* entity) {
 void Entity_damage(Entity* entity, float damage) {
     entity->health -= damage;
     Cooldown_reset(&entity->damageAnim);
-    if (entity->health <= 0) Entity_kill(entity);
+    if (entity->health <= 0) {
+        Entity_kill(entity);
+    }
 }
 
 void Entity_updateVelocity(Entity* entity) {

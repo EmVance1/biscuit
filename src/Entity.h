@@ -45,6 +45,7 @@ typedef struct Entity {
 Entity Entity_createPlayer(sfVector2f position);
 Entity Entity_createEnemy(sfVector2f position, sfColor color, const navMesh* navmesh);
 
+bool Entity_isEnemy(const Entity* entity);
 void Entity_offset(Entity* entity, sfVector2f offset);
 void Entity_move(Entity* entity);
 void Entity_startDash(Entity* entity);
