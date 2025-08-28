@@ -12,9 +12,10 @@
 #include "world.h"
 
 
-#define PI 3.14159265f
+#define PI 3.141592f
 #define INTO_DEG 180.f / PI
 #define INTO_RAD PI / 180.f
+#define INV_ROOT2 1.f / 1.414213f
 
 #define ENTITY_MAX 128 + 1
 #define PLAYER_INDEX ENTITY_MAX - 1
@@ -48,17 +49,14 @@ void Game_Init(const World* _world) {
     player = &entities[PLAYER_INDEX];
 }
 
-
 void Game_Update() {
     processKeyClicked();
-    Collision_HandlePlayerNavmesh(player, world->colliders);
-    deceleratePlayer();
+    // Collision_HandlePlayerNavmesh(player, world->colliders);
     Entity_move(player);
 }
 
 void Game_Render(sfRenderWindow* window) {
     animateSword(window);
-    Entity_render(window, player);
     for (int i = 0; i < ENTITY_MAX; i++) {
         if (entities[i].is_alive) {
             Entity_render(window, &entities[i]);
@@ -76,19 +74,28 @@ static float lerp(float a, float b, float t) {
 }
 
 static void processKeyClicked(void) {
-    float dt = Clock_deltaTime();
+    sfVector2f movement = (sfVector2f){};
     if (sfKeyboard_isKeyPressed(sfKeyW)) {
-        Entity_addVelocity(player, (sfVector2f){ 0.f, -player->acc*dt});
+        movement.y -= 1.f;
     }
     if (sfKeyboard_isKeyPressed(sfKeyS)) {
-        Entity_addVelocity(player, (sfVector2f){ 0.f, player->acc*dt});
+        movement.y += 1.f;
     }
     if (sfKeyboard_isKeyPressed(sfKeyA)) {
-        Entity_addVelocity(player, (sfVector2f){ -player->acc*dt, 0.f });
+        movement.x -= 1.f;
     }
     if (sfKeyboard_isKeyPressed(sfKeyD)) {
-        Entity_addVelocity(player, (sfVector2f){ player->acc*dt, 0.f });
+        movement.x += 1.f;
     }
+    if (sfVec2f_lenSquared(movement) > 1.1f) {
+        movement.x *= INV_ROOT2;
+        movement.y *= INV_ROOT2;
+    }
+    Entity_addVelocity(player, sfVec2f_scale(movement, player->acc * Clock_deltaTime() * 60.f));
+    if (sfVec2f_lenSquared(movement) < 0.1f || !Cooldown_ready(&player->dashCooldown)) {
+        deceleratePlayer();
+    }
+
     if (sfKeyboard_isKeyPressed(sfKeySpace)) {
         Entity_startDash(player);
     }
@@ -97,10 +104,10 @@ static void processKeyClicked(void) {
     }
 }
 
-// decelerates player by 10% of current velocity
+// decelerates player by 2% of current velocity
 static void deceleratePlayer(void) {
-    if (fabsf(sfVec2f_len(player->velocity)) > 0.1f) {
-        Entity_setVelocity(player, sfVec2f_scale(player->velocity, 0.95f));
+    if (sfVec2f_lenSquared(player->velocity) > 0.01f) {
+        Entity_setVelocity(player, sfVec2f_scale(player->velocity, powf(0.80f, Clock_deltaTime() * 60.f)));
     } else {
         Entity_setVelocity(player, (sfVector2f){ 0, 0 });
     }

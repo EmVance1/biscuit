@@ -16,12 +16,12 @@ Entity Entity_createPlayer(sfVector2f position) {
         .lastDir   = (sfVector2f){ 1, 0 },
         .rectBound = (sfFloatRect){position.x - size.x * 0.5f, position.y - size.y * 0.5f, size.x, size.y },
         .fillCol = sfBlue,
-        .speed = 300.0f,
-        .acc = 10000.0f,
-        .dashSpeed = 600.0f,
+        .speed = 3.f,
+        .acc = 1.5f,
+        .dashSpeed = 16.f,
         .health = 100,
         .meleeRange  = size.x * 2.5f,
-        .meleeDamage = 40.0f,
+        .meleeDamage = 40.f,
         .dashCooldown   = Cooldown_create(0.5f),
         .attackCooldown = Cooldown_create(0.3f),
         .attackAnim     = Cooldown_create(0.2f),
@@ -40,12 +40,12 @@ Entity Entity_createEnemy(sfVector2f position, sfColor color, const navMesh* nav
         .lastDir   = (sfVector2f){ 1, 0 },
         .rectBound = (sfFloatRect){position.x - size.x * 0.5f, position.y - size.y * 0.5f, size.x, size.y },
         .fillCol = color,
-        .speed = 90.0f,
-        .acc = 10000.0f,
-        .dashSpeed = 600.0f,
+        .speed = 3.0f,
+        .acc = 1.5f,
+        .dashSpeed = 16.f,
         .health = 100,
-        .meleeRange  = 70.0f,
-        .meleeDamage = 20.0f,
+        .meleeRange  = 70.f,
+        .meleeDamage = 20.f,
         .dashCooldown   = Cooldown_create(0.5f),
         .attackCooldown = Cooldown_create(1.0f),
         .attackAnim     = Cooldown_create(0.2f),
@@ -71,7 +71,7 @@ void Entity_kill(Entity* entity) {
 
 // Does not account for delta time
 void Entity_offset(Entity* entity, sfVector2f dir) {
-    sfVector2f offset = dir;
+    const sfVector2f offset = dir;
     entity->position = sfVec2f_add(entity->position, offset);
     entity->rectBound.left += offset.x;
     entity->rectBound.top += offset.y;
@@ -83,27 +83,27 @@ void Entity_move(Entity* entity) {
     if (Entity_isEnemy(entity)) {
         PathTracker_progress(entity->pathtracker);
     } else {
-        sfVector2f offset = sfVec2f_scale(entity->velocity,Clock_deltaTime());
+        const sfVector2f offset = sfVec2f_scale(entity->velocity, Clock_deltaTime() * 60.f);
         entity->position = sfVec2f_add(entity->position, offset);
         entity->rectBound.left += offset.x;
         entity->rectBound.top += offset.y;
-        if (sfVec2f_len(entity->velocity) > 0.01f) {
+        if (sfVec2f_lenSquared(entity->velocity) > 0.01f) {
             entity->lastDir = sfVec2f_norm(entity->velocity);
         }
     }
 }
 
 void Entity_addVelocity(Entity* entity, sfVector2f acceleration) {
-    float prevSpeed = sfVec2f_len(entity->velocity);
-    entity->velocity = sfVec2f_add(entity->velocity,acceleration);
+    const float prevSpeedSq = sfVec2f_lenSquared(entity->velocity);
+    entity->velocity = sfVec2f_add(entity->velocity, acceleration);
 
-    if (sfVec2f_len(entity->velocity) > entity->speed) {
-        // moved from slower into greater than max speed
-        if (prevSpeed < entity->speed) {
-            entity->velocity = sfVec2f_scale(entity->velocity, entity->speed*Clock_deltaTime()/sfVec2f_len(entity->velocity));
-        // was already above max speed, alter direction and keep speed (because of dash)
+    if (sfVec2f_lenSquared(entity->velocity) > entity->speed * entity->speed) {
+        if (!Cooldown_ready(&entity->dashCooldown)) {
+            // dashing - alter direction and keep speed
+            entity->velocity = sfVec2f_scale(sfVec2f_norm(entity->velocity), sqrtf(prevSpeedSq));
         } else {
-            entity->velocity = sfVec2f_scale(entity->velocity, prevSpeed*Clock_deltaTime()/sfVec2f_len(entity->velocity));
+            // regular movement - max out speed
+            entity->velocity = sfVec2f_scale(sfVec2f_norm(entity->velocity), entity->speed);
         }
     }
 }
@@ -114,13 +114,13 @@ void Entity_setVelocity(Entity* entity, sfVector2f velocity) {
 }
 
 void Entity_startDash(Entity* entity) {
-    if (Cooldown_get(&entity->dashCooldown) <= 0.0f) {
+    if (Cooldown_ready(&entity->dashCooldown)) {
         sfVector2f velocity = entity->velocity;
-        if (fabsf(sfVec2f_len(velocity)) < 0.001f) return;
+        if (sfVec2f_lenSquared(velocity) < 0.001f) return;
         velocity = sfVec2f_norm(velocity);
         velocity = sfVec2f_scale(velocity, entity->dashSpeed);
         Entity_setVelocity(entity, velocity);
-        sfClock_restart(entity->dashCooldown.clock);
+        Cooldown_reset(&entity->dashCooldown);
     }
 }
 
@@ -134,29 +134,30 @@ void Entity_damage(Entity* entity, float damage) {
 }
 
 
+// confused about this
+/*
 void Entity_updateVelocity(Entity* entity) {
     // decelerate entity by 10% of current velocity
     sfVector2f oppositeVel = sfVec2f_scale(entity->velocity, -0.1f);
     Entity_setVelocity(entity, oppositeVel);
 }
+*/
 
 
 void Entity_render(sfRenderWindow* window, Entity *entity) {
     sfRectangleShape* rect = sfRectangleShape_create();
-    sfRenderStates renderState = sfRenderStates_default();
-    sfRectangleShape_setPosition(rect, (sfVector2f) {entity->rectBound.left, entity->rectBound.top});
-    sfRectangleShape_setSize(rect, (sfVector2f) {entity->rectBound.width, entity->rectBound.height});
+    sfRectangleShape_setPosition(rect, (sfVector2f){ entity->rectBound.left, entity->rectBound.top });
+    sfRectangleShape_setSize(rect, (sfVector2f){ entity->rectBound.width, entity->rectBound.height });
 
-    if (entity->health <= 0) {
-       return;
-    } else if (Cooldown_get(&entity->damageAnim) > 0) {
+    if (!Cooldown_ready(&entity->damageAnim)) {
         sfRectangleShape_setFillColor(rect, sfRed);
     } else {
         sfRectangleShape_setFillColor(rect, entity->fillCol);
     }
 
-    sfRenderWindow_drawRectangleShape(window, rect, &renderState);
+    sfRenderWindow_drawRectangleShape(window, rect, NULL);
 }
+
 
 
 Cooldown Cooldown_create(float time) {

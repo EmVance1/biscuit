@@ -53,7 +53,7 @@ void Entity_move(Entity* entity);
 void Entity_startDash(Entity* entity);
 void Entity_addVelocity(Entity* entity, sfVector2f acceleration);
 void Entity_setVelocity(Entity* entity, sfVector2f velocity);
-void Entity_updateVelocity(Entity* entity);
+// void Entity_updateVelocity(Entity* entity);
 void Entity_damage(Entity* entity, float damage);
 void Entity_kill(Entity* entity);
 void Entity_render(sfRenderWindow* window, Entity* entity);
