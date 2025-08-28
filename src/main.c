@@ -7,6 +7,7 @@
 #include "tilemap.h"
 
 #include <navmesh/c/lib.h>
+#include "pathtracker.h"
 
 #ifdef VANGO_DEBUG
     #define SCREEN_MODE sfDefaultStyle
@@ -56,6 +57,9 @@ int main() {
     sfuTextureAtlas* tileatlas = sfuTextureAtlas_createFromFile("res/textures/tilesheet.png", (sfVector2u){ 8, 8 });
     sfuTileMap* sandbox = sandboxMap(tileatlas);
 
+    const navMesh* navmesh = navMesh_createFromGrid(NULL, 20, 20, 1, 0, GEN_METHOD_FLOODFILL, 0.01f);
+    PathTracker* tracker = PathTracker_create(navmesh);
+
     Game_Init();
 
     while (sfRenderWindow_isOpen(window)) {
@@ -87,6 +91,9 @@ int main() {
 
         sfRenderWindow_display(window);
     }
+
+    PathTracker_free(tracker);
+    navMesh_free(navmesh);
 
     sfuTileMap_free(sandbox);
     sfuTextureAtlas_free(tileatlas);
