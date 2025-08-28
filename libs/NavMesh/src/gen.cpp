@@ -195,8 +195,6 @@ std::vector<Polygon> floodfill(const uint8_t* data, size_t width, size_t height,
 std::vector<Polygon> floodfill(const u8* data, size_t width, size_t height, size_t stride, size_t index) {
     auto result = EdgeMap();
 
-    printf("floodfilling\n");
-
     for (usize i = 0; i < width * height; i++) {
         const isize x = i % width;
         const isize y = i / width;
@@ -216,8 +214,6 @@ std::vector<Polygon> floodfill(const u8* data, size_t width, size_t height, size
             }
         }
     }
-
-    printf("concating\n");
 
     return concat_edges(result);
 }
