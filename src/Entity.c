@@ -71,6 +71,7 @@ void Entity_damage(Entity* entity, float damage) {
 
 
 void Entity_kill(Entity* entity) {
+    entity->health = 0; // filler expression
 }
 
 
@@ -99,27 +100,32 @@ void Entity_render(sfRenderWindow* window, Entity *entity) {
 }
 
 
+// Creates a cooldown with one-second time.
 Cooldown Cooldown_Default() {
     return (Cooldown) {sfClock_create(), 1.0f};
 }
 
 
+// Get time remaining on cooldown. A negative return is time run out.
 float Cooldown_Get(Cooldown cd) {
     return cd.cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cd.clock));
 }
 
 
+// Set cooldown time and restarts the clock.
 void Cooldown_Set(Cooldown cd, float time) {
     cd.cooldownLength = time;
     sfClock_restart(cd.clock);
 }
 
 
+// Restarts the clock.
 void Cooldown_Reset(Cooldown cd) {
     sfClock_restart(cd.clock);
 }
 
 
+// Creates a cooldown with specified time.
 Cooldown Cooldown_Create(float time) {
     return (Cooldown) {sfClock_create(), time};
 }

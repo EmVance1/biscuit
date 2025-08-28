@@ -2,23 +2,27 @@
 #include <math.h>
 #include "Game.h"
 #include "Entity.h"
+#include "PlayerCollision.h"
 #include "clock.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
 #include <malloc.h>
+#include "navmesh/c/mesh.h"
 
 #define PI 3.141592653589
 
 static Entity player;
 static Entity* enemies;
 static int numEnemies;
+static navPolygonArray* meshPolygons;
 
 
 static float lerp(float a, float b, float t);
 static void processKeyClicked();
 static void animateSword(sfRenderWindow* window);
 static void deceleratePlayer(Entity* _player);
+static void handleWallCollisions();
 static void attackMelee();
 static void stunArea();
 static void castFireball();
@@ -82,8 +86,17 @@ void Game_Init() {
     };
 }
 
+
+void Game_SetMeshPolygons(navPolygonArray* meshPoly) {
+    meshPolygons = meshPoly;
+}
+
+
 void Game_Update() {
     processKeyClicked();
+
+    Collision_HandlePlayerNavmesh(&player, meshPolygons);
+    printf("Collisions done");
     deceleratePlayer(&player);
     Entity_move(&player);
 }
