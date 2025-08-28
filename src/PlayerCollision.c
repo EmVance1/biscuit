@@ -82,7 +82,7 @@ bool handlePlayerWallCollision(Entity* player, sfVector2f* vertices, int numVert
     }
     if (lines > 0) {
         sfVector2f offset = resolveRectLineCollision(rectBound, collisionVertices, lines);
-        Entity_move(player, offset);
+        Entity_offset(player, offset);
         if (offset.x == 0 && offset.y == 0) return false;
     } else return false;
 

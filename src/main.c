@@ -33,7 +33,6 @@ sfuTileMap* sandboxMap(const sfuTextureAtlas* atlas) {
         3, 1,  1, 0,  1, 0,  1, 0,  1, 0,  1, 0,  1, 0,  4, 1,
     };
     
-    printf("Generated tile map.\nCell size: %d,%d\nDimensions: %d, %d\n",atlas->cellsize.x,atlas->cellsize.y,8,8);
     return sfuTileMap_createFromIndices(atlas, (uint32_t*)map, (sfVector2u){ 8, 8 });
 }
 
@@ -94,6 +93,8 @@ int main() {
 
     PathTracker_free(tracker);
     navMesh_free(navmesh);
+
+    Game_Destroy();
 
     sfuTileMap_free(sandbox);
     sfuTextureAtlas_free(tileatlas);
