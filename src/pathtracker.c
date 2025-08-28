@@ -11,13 +11,13 @@ static navVector2f from_sf(sfVector2f v) { return (navVector2f){ v.x, v.y }; }
 
 typedef struct PathTracker {
     const navMesh* mesh;
-    navPath* path;
+    navVertexChain* path;
     size_t path_index;
     float  path_prog;
     sfVector2f position;
     float speed;
     bool override_stop;
-} PathTracker; 
+} PathTracker;
 
 
 PathTracker* PathTracker_create(const navMesh* mesh) {
@@ -78,7 +78,7 @@ sfVector2f PathTracker_getTargetPosition(const PathTracker* self) {
 }
 
 
-const navPath* PathTracker_getActivePath(const PathTracker* self) {
+const navVertexChain* PathTracker_getActivePath(const PathTracker* self) {
     return self->path;
 }
 

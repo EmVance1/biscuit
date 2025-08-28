@@ -4,6 +4,7 @@
 #include "Game.h"
 #include "atlas.h"
 #include "clock.h"
+#include "navmesh/c/mesh.h"
 #include "tilemap.h"
 
 #include <navmesh/c/lib.h>
@@ -32,9 +33,10 @@ sfuTileMap* sandboxMap(const sfuTextureAtlas* atlas) {
         2, 1,  0, 3,  1, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 1,
         3, 1,  1, 0,  1, 0,  1, 0,  1, 0,  1, 0,  1, 0,  4, 1,
     };
-    
+
     return sfuTileMap_createFromIndices(atlas, (uint32_t*)map, (sfVector2u){ 8, 8 });
 }
+
 
 
 int main() {
@@ -70,6 +72,9 @@ int main() {
     const navMesh* navmesh = navMesh_createFromGrid(meshdata, 8, 8, 1, 0, GEN_METHOD_FLOODFILL, 0.01f);
     PathTracker* tracker = PathTracker_create(navmesh);
 
+    // EXAMPLE GET POLYGONS, ALLOCATES, MUST BE FREED
+    const navPolygonArray* mesh_polygons = navMesh_clonePolygons(navmesh);
+
     Game_Init();
 
     while (sfRenderWindow_isOpen(window)) {
@@ -101,6 +106,9 @@ int main() {
 
         sfRenderWindow_display(window);
     }
+
+    // LIKE THIS
+    navMesh_freePolygons(mesh_polygons);
 
     PathTracker_free(tracker);
     navMesh_free(navmesh);

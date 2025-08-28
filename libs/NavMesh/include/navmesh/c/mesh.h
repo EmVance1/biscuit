@@ -8,10 +8,16 @@ extern "C" {
 
 typedef struct navMesh navMesh;
 
-typedef struct navPath {
+typedef struct navVertexChain {
+    bool loop;
     size_t count;
     navVector2f points[];
-} navPath;
+} navVertexChain;
+
+typedef struct navPolygonArray {
+    size_t count;
+    const navVertexChain* polys[];
+} navPolygonArray;
 
 
 navMesh* navMesh_createFromFile(const char* filename, float scale);
@@ -19,7 +25,10 @@ void navMesh_writeToFile(const navMesh* self, const char* filename, float scale)
 void navMesh_free(const navMesh* self);
 
 size_t navMesh_getTriangleIndex(const navMesh* self, navVector2f p, float error);
-navPath* navMesh_findPath(const navMesh* self, navVector2f begin, navVector2f end);
+const navVertexChain* navMesh_findPath(const navMesh* self, navVector2f begin, navVector2f end);
+
+navPolygonArray* navMesh_clonePolygons(const navMesh* self);
+void navMesh_freePolygons(const navPolygonArray* self);
 
 #ifdef __cplusplus
 }

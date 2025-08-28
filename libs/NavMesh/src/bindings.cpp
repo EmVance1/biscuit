@@ -87,16 +87,41 @@ size_t navMesh_getTriangleIndex(const navMesh* self, navVector2f p, float error)
     }
 }
 
-navPath* navMesh_findPath(const navMesh* self, navVector2f begin, navVector2f end) {
+const navVertexChain* navMesh_findPath(const navMesh* self, navVector2f begin, navVector2f end) {
     const auto path = self->impl.pathfind(fromc(begin), fromc(end));
     if (path.empty()) { return NULL; }
-    navPath* result = (navPath*)malloc(sizeof(navPath) + path.size() * sizeof(navVector2f));
+    navVertexChain* result = (navVertexChain*)malloc(sizeof(navVertexChain) + path.size() * sizeof(navVector2f));
     if (!result) { return NULL; }
+    result->loop = false;
     result->count = path.size();
     for (size_t i = 0; i < path.size(); i++) {
         result->points[i] = intoc(path[i]);
     }
     return result;
+}
+
+
+navPolygonArray* navMesh_clonePolygons(const navMesh* self) {
+    navPolygonArray* result = (navPolygonArray*)malloc(sizeof(navPolygonArray) + self->impl.polygons.size() * sizeof(navVertexChain*));
+    if (!result) { return NULL; }
+    result->count = self->impl.polygons.size();
+    for (size_t i = 0; i < result->count; i++) {
+        navVertexChain* chain = (navVertexChain*)malloc(sizeof(navVertexChain) + self->impl.polygons[i].size() * sizeof(navVector2f*));
+        chain->loop = true;
+        chain->count = self->impl.polygons[i].size();
+        for (size_t j = 0; j < chain->count; j++) {
+            chain->points[j].x = (float)self->impl.polygons[i][j].x;
+            chain->points[j].y = (float)self->impl.polygons[i][j].y;
+        }
+    }
+    return result;
+}
+
+void navMesh_freePolygons(const navPolygonArray* self) {
+    for (size_t i = 0; i < self->count; i++) {
+        free((navVertexChain*)self->polys[i]);
+    }
+    free((navPolygonArray*)self);
 }
 
 
