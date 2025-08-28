@@ -54,8 +54,7 @@ int main() {
 
     PathTracker* tracker = PathTracker_create(sandbox.navmesh);
 
-    Game_Init();
-    Game_SetMeshPolygons(sandbox.colliders);
+    Game_Init(&sandbox);
 
     while (sfRenderWindow_isOpen(window)) {
         Clock_setFrame();
@@ -89,7 +88,7 @@ int main() {
 
     PathTracker_free(tracker);
 
-    Game_Destroy();
+    // Game_Destroy();
 
     World_free(&sandbox);
     sfuTextureAtlas_free(tileatlas);
