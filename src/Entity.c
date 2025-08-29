@@ -1,21 +1,23 @@
 #include "Entity.h"
 #include <math.h>
 #include <stdlib.h>
+#include "SFML/Graphics/RectangleShape.h"
 #include "SFML/Graphics/Sprite.h"
+#include "SFML/Graphics/Texture.h"
 #include "clock.h"
 #include "pathtracker.h"
 
 
 Entity Entity_createPlayer(sfVector2f position) {
-    const sfVector2f size = (sfVector2f){ 15, 25 };
+    const sfVector2f size = (sfVector2f){ 20, 35 };
 
     return (Entity){
         .is_alive = true,
         .position  = position,
         .velocity  = (sfVector2f){ 0, 0 },
         .lastDir   = (sfVector2f){ 1, 0 },
-        .rectBound = (sfFloatRect){position.x - size.x * 0.5f, position.y - size.y * 0.5f, size.x, size.y },
-        .fillCol = sfBlue,
+        .rectBound = (sfFloatRect){position.x - size.x * 0.5f, position.y - size.y * 0.35f, size.x, size.y },
+        .fillCol = sfWhite, // (sfColor){ 200, 200, 255, 255 },
         .speed = 3.f,
         .acc = 1.5f,
         .dashSpeed = 20.f,
@@ -30,16 +32,16 @@ Entity Entity_createPlayer(sfVector2f position) {
     };
 }
 
-Entity Entity_createEnemy(sfVector2f position, sfColor color, const navMesh* navmesh) {
-    const sfVector2f size = (sfVector2f){ 15, 25 };
+Entity Entity_createEnemy(sfVector2f position, const navMesh* navmesh) {
+    const sfVector2f size = (sfVector2f){ 20, 35 };
 
     return (Entity){
         .is_alive = true,
         .position  = position,
         .velocity  = (sfVector2f){ 0, 0 },
         .lastDir   = (sfVector2f){ 1, 0 },
-        .rectBound = (sfFloatRect){position.x - size.x * 0.5f, position.y - size.y * 0.5f, size.x, size.y },
-        .fillCol = color,
+        .rectBound = (sfFloatRect){position.x - size.x * 0.5f, position.y - size.y * 0.35f, size.x, size.y },
+        .fillCol = (sfColor){ 255, 150, 150, 255 },
         .speed = 3.0f,
         .acc = 1.5f,
         .dashSpeed = 20.f,
@@ -54,6 +56,14 @@ Entity Entity_createEnemy(sfVector2f position, sfColor color, const navMesh* nav
     };
 }
 
+
+static sfTexture* playerTexture;
+static sfTexture* enemyTexture;
+
+void Entity_loadTextures() {
+    playerTexture = sfTexture_createFromFile("res/textures/player.png", NULL);
+    enemyTexture = sfTexture_createFromFile("res/textures/enemy.png", NULL);
+}
 
 bool Entity_isEnemy(const Entity* entity) {
     return entity->pathtracker != NULL;
@@ -142,8 +152,20 @@ void Entity_updateVelocity(Entity* entity) {
 
 void Entity_render(sfRenderWindow* window, Entity *entity) {
     sfRectangleShape* rect = sfRectangleShape_create();
-    sfRectangleShape_setPosition(rect, (sfVector2f){ entity->rectBound.left, entity->rectBound.top });
     sfRectangleShape_setSize(rect, (sfVector2f){ entity->rectBound.width, entity->rectBound.height });
+
+    if (entity->lastDir.x < 0) {
+        sfRectangleShape_setPosition(rect, (sfVector2f){ entity->rectBound.left + entity->rectBound.width, entity->rectBound.top });
+        sfRectangleShape_setScale(rect, (sfVector2f){ -1.f, 1.f });
+    } else {
+        sfRectangleShape_setPosition(rect, (sfVector2f){ entity->rectBound.left, entity->rectBound.top });
+    }
+
+    if (Entity_isEnemy(entity)) {
+        sfRectangleShape_setTexture(rect, enemyTexture, true);
+    } else {
+        sfRectangleShape_setTexture(rect, playerTexture, true);
+    }
 
     if (!Cooldown_ready(&entity->damageAnim)) {
         sfRectangleShape_setFillColor(rect, sfRed);
