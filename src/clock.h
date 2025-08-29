@@ -4,6 +4,7 @@
 
 void Clock_init();
 void Clock_setFrame();
+float Clock_totalTime();
 float Clock_deltaTime();
 
 

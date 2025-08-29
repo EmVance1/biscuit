@@ -1,6 +1,5 @@
 #include "Entity.h"
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include "clock.h"
 #include "pathtracker.h"
@@ -18,7 +17,7 @@ Entity Entity_createPlayer(sfVector2f position) {
         .fillCol = sfBlue,
         .speed = 3.f,
         .acc = 1.5f,
-        .dashSpeed = 16.f,
+        .dashSpeed = 20.f,
         .health = 100,
         .meleeRange  = size.x * 2.5f,
         .meleeDamage = 40.f,
@@ -42,7 +41,7 @@ Entity Entity_createEnemy(sfVector2f position, sfColor color, const navMesh* nav
         .fillCol = color,
         .speed = 3.0f,
         .acc = 1.5f,
-        .dashSpeed = 16.f,
+        .dashSpeed = 20.f,
         .health = 100,
         .meleeRange  = 70.f,
         .meleeDamage = 20.f,
@@ -62,10 +61,6 @@ bool Entity_isEnemy(const Entity* entity) {
 void Entity_kill(Entity* entity) {
     entity->is_alive = false;
     free(entity->pathtracker);
-    Cooldown_free(&entity->dashCooldown);
-    Cooldown_free(&entity->attackCooldown);
-    Cooldown_free(&entity->attackAnim);
-    Cooldown_free(&entity->damageAnim);
 }
 
 
@@ -161,31 +156,27 @@ void Entity_render(sfRenderWindow* window, Entity *entity) {
 
 
 Cooldown Cooldown_create(float time) {
-    return (Cooldown){ sfClock_create(), time };
+    return (Cooldown){ .cooldownBegin=Clock_totalTime(), .cooldownLength=time };
 }
 
 Cooldown Cooldown_default() {
     return Cooldown_create(1.f);
 }
 
-void Cooldown_free(const Cooldown* self) {
-    sfClock_destroy(self->clock);
-}
-
 void Cooldown_reset(Cooldown* cd) {
-    sfClock_restart(cd->clock);
+    cd->cooldownBegin = Clock_totalTime();
 }
 
 void Cooldown_set(Cooldown* cd, float time) {
     cd->cooldownLength = time;
-    sfClock_restart(cd->clock);
+    cd->cooldownBegin = Clock_totalTime();
 }
 
 float Cooldown_get(const Cooldown* cd) {
-    return cd->cooldownLength - sfTime_asSeconds(sfClock_getElapsedTime(cd->clock));
+    return cd->cooldownLength - (Clock_totalTime() - cd->cooldownBegin);
 }
 
 bool Cooldown_ready(const Cooldown* cd) {
-    return sfTime_asSeconds(sfClock_getElapsedTime(cd->clock)) >= cd->cooldownLength;
+    return (Clock_totalTime() - cd->cooldownBegin) >= cd->cooldownLength;
 }
 

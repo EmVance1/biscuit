@@ -8,7 +8,7 @@ typedef struct PathTracker PathTracker;
 typedef struct navMesh navMesh;
 
 typedef struct Cooldown {
-    sfClock* clock;
+    float cooldownBegin;
     float cooldownLength;
 } Cooldown;
 
@@ -60,7 +60,6 @@ void Entity_render(sfRenderWindow* window, Entity* entity);
 
 Cooldown Cooldown_create(float time);
 Cooldown Cooldown_default();
-void Cooldown_free(const Cooldown* self);
 void Cooldown_reset(Cooldown* cd);
 void Cooldown_set(Cooldown* cd, float time);
 // Returns remaining time on cooldown in seconds
