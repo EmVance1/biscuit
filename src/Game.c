@@ -52,10 +52,13 @@ void Game_Init(const World* _world) {
     player = &entities[PLAYER_INDEX];
 }
 
-void Game_Update(void) {
+void Game_Update(sfView* camera) {
     processKeyClicked();
-    Collision_HandlePlayerNavmesh(player, world->colliders);
+    Collision_HandlePlayerNavmesh(player, world->colliders, world->mesh_to_world);
     Entity_move(player);
+    const sfVector2f center = sfView_getCenter(camera);
+    const sfVector2f dir = sfVec2f_sub(player->position, center);
+    sfView_move(camera, sfVec2f_scale(dir, 0.005f));
 }
 
 void Game_Render(sfRenderWindow* window) {

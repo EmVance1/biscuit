@@ -19,11 +19,15 @@ World World_createFromIndices(const uint32_t* indices, sfVector2u size, const sf
     }
     */
 
+    sfuTileMap* background = sfuTileMap_createFromIndices(atlas, indices, size);
+    sfTransformable_move(background->transform, (sfVector2f){ (float)atlas->cellsize.x * 0.5f, (float)atlas->cellsize.y * 0.5f });
     navMesh* navmesh = navMesh_createFromGrid((uint8_t*)grid, size.x+1, size.y+1, 1, 0, GEN_METHOD_FLOODFILL, 0.001f);
+    navPolygonArray* colliders = navMesh_clonePolygons(navmesh);
+
     return (World){
-        .background = sfuTileMap_createFromIndices(atlas, indices, size),
-        .navmesh = navmesh,
-        .colliders = navMesh_clonePolygons(navmesh),
+        .background = background,
+        .navmesh    = navmesh,
+        .colliders  = colliders,
         .mesh_to_world = (float)atlas->cellsize.x,
         .world_to_mesh = 1.f / (float)atlas->cellsize.x,
         .gridsize = (sfVector2f){ (float)size.x+1.f, (float)size.y+1.f },

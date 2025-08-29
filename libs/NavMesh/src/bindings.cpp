@@ -110,8 +110,8 @@ navPolygonArray* navMesh_clonePolygons(const navMesh* self) {
         chain->loop = true;
         chain->count = self->impl.polygons[i].size();
         for (size_t j = 0; j < chain->count; j++) {
-            chain->points[j].x = (float)self->impl.polygons[i][j].x * 0.1f;
-            chain->points[j].y = (float)self->impl.polygons[i][j].y * 0.1f;
+            chain->points[chain->count - 1 - j].x = (float)self->impl.polygons[i][j].x * 0.1f;
+            chain->points[chain->count - 1 - j].y = (float)self->impl.polygons[i][j].y * 0.1f;
         }
         result->polys[i] = chain;
     }

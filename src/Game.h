@@ -7,7 +7,7 @@ typedef struct World World;
 typedef struct navPolygonArray navPolygonArray;
 
 void Game_Init(const World* world);
-void Game_Update(void);
+void Game_Update(sfView* camera);
 void Game_Render(sfRenderWindow* window);
 // void Game_Destroy();
 

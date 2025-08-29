@@ -12,6 +12,6 @@ sfVector2f Collision_ResolveRectLine(sfFloatRect rect, sfVector2f* v, int lines)
 
 bool Collision_HandlePlayerWall(Entity* player, sfVector2f* vertices, int numVertices);
 
-bool Collision_HandlePlayerNavmesh(Entity* player, navPolygonArray* meshPoly);
+bool Collision_HandlePlayerNavmesh(Entity* player, navPolygonArray* meshPoly, float worldscale);
 
 #endif
