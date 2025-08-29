@@ -84,7 +84,7 @@ bool Collision_HandlePlayerWall(Entity* player, sfVector2f* vertices, int numVer
     if (lines > 0) {
         sfVector2f offset = Collision_ResolveRectLine(rectBound, collisionVertices, lines);
         Entity_offset(player, offset);
-        if (offset.x == 0 && offset.y == 0) return false;
+        if (sfVec2f_lenSquared(offset) < 0.001f) return false;
     } else return false;
 
     free(collisionVertices);
@@ -94,13 +94,14 @@ bool Collision_HandlePlayerWall(Entity* player, sfVector2f* vertices, int numVer
 
 bool Collision_HandlePlayerNavmesh(Entity* player, navPolygonArray* meshPolys) {
     sfFloatRect rectBound = player->rectBound;
-    for (int k=0; k<(int) meshPolys->count; k++) {
-        int numVertices = meshPolys->polys[k]->count;
-        int iters = meshPolys->polys[k]->loop ? numVertices : numVertices-1; // In case of loop, have to go one line further than numVertices
-        sfVector2f* collisionVertices = (sfVector2f*)malloc(sizeof(sfVector2f)* (numVertices+1) *2);
+    for (size_t k = 0; k < meshPolys->count; k++) {
+        size_t numVertices = meshPolys->polys[k]->count;
+        size_t iters = meshPolys->polys[k]->loop ? numVertices : numVertices-1; // In case of loop, have to go one line further than numVertices
+        sfVector2f* collisionVertices = (sfVector2f*)malloc(sizeof(sfVector2f) * (numVertices+1) * 2);
+        if (!collisionVertices) return false;
         int lines = 0;
 
-        for (int i=0; i<iters; i++) {
+        for (size_t i = 0; i < iters; i++) {
             navVector2f nav0 = meshPolys->polys[k]->points[i];
             navVector2f nav1 = meshPolys->polys[k]->points[(i+1)%numVertices];
 
@@ -116,15 +117,16 @@ bool Collision_HandlePlayerNavmesh(Entity* player, navPolygonArray* meshPolys) {
         if (lines > 0) {
             sfVector2f offset = Collision_ResolveRectLine(rectBound, collisionVertices, lines);
             Entity_offset(player, offset);
-            if (offset.x == 0 && offset.y == 0) return false;
+            if (sfVec2f_lenSquared(offset) <= 0.001f) return false;
         } else {
             free(collisionVertices);
             return false;
         }
 
         free(collisionVertices);
-
         return true;
     }
+
     return false;
 }
+

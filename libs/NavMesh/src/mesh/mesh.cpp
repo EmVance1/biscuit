@@ -12,11 +12,11 @@ namespace nav {
 
 
 Mesh::Mesh(const Mesh& other)
-    : vertices(other.vertices), triangles(other.triangles), edges(other.edges)
+    : vertices(other.vertices), triangles(other.triangles), edges(other.edges), polygons(other.polygons)
 {}
 
 Mesh::Mesh(Mesh&& other)
-    : vertices(std::move(other.vertices)), triangles(std::move(other.triangles)), edges(std::move(other.edges))
+    : vertices(std::move(other.vertices)), triangles(std::move(other.triangles)), edges(std::move(other.edges)), polygons(std::move(other.polygons))
 {}
 
 
