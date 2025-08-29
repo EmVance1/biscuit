@@ -1,6 +1,7 @@
 #include "Entity.h"
 #include <math.h>
 #include <stdlib.h>
+#include "SFML/Graphics/Sprite.h"
 #include "clock.h"
 #include "pathtracker.h"
 
@@ -159,7 +160,7 @@ Cooldown Cooldown_create(float time) {
     return (Cooldown){ .cooldownBegin=Clock_totalTime() - time, .cooldownLength=time };
 }
 
-Cooldown Cooldown_default() {
+Cooldown Cooldown_default(void) {
     return Cooldown_create(1.f);
 }
 

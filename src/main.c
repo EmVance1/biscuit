@@ -1,5 +1,6 @@
 #include <SFML/Graphics.h>
 #include <stdlib.h>
+#include <time.h>
 #include <stdio.h>
 #include "Game.h"
 #include "atlas.h"
@@ -36,7 +37,7 @@ World sandboxMap(const sfuTextureAtlas* atlas) {
 int main() {
     sfVideoMode videomode = sfVideoMode_getDesktopMode();
     sfRenderWindow* window = sfRenderWindow_create(videomode, "Biscuit", SCREEN_MODE, NULL);
-    srand((time_t)NULL);
+    srand((uint32_t)time(NULL));
     Clock_init();
 
     sfView* camera = sfView_createFromRect((sfFloatRect){ 0, 0, 480, 270 });

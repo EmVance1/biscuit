@@ -59,7 +59,7 @@ void Entity_kill(Entity* entity);
 void Entity_render(sfRenderWindow* window, Entity* entity);
 
 Cooldown Cooldown_create(float time);
-Cooldown Cooldown_default();
+Cooldown Cooldown_default(void);
 void Cooldown_reset(Cooldown* cd);
 void Cooldown_set(Cooldown* cd, float time);
 // Returns remaining time on cooldown in seconds

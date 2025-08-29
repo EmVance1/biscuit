@@ -2,10 +2,10 @@
 #define CLOCK_H
 
 
-void Clock_init();
-void Clock_setFrame();
-float Clock_totalTime();
-float Clock_deltaTime();
+void Clock_init(void);
+void Clock_setFrame(void);
+float Clock_totalTime(void);
+float Clock_deltaTime(void);
 
 
 #endif

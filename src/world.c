@@ -8,11 +8,15 @@ static bool* grid_createFromTilemap(const sfVector2u* indices, sfVector2u size);
 
 World World_createFromIndices(const uint32_t* indices, sfVector2u size, const sfuTextureAtlas* atlas) {
     bool* grid = grid_createFromTilemap((sfVector2u*)indices, size);
-    navMesh* navmesh = navMesh_createFromGrid((uint8_t*)grid, size.x, size.y, 1, 0, GEN_METHOD_FLOODFILL, 0.001f);
+
+    navMesh* navmesh = navMesh_createFromGrid((uint8_t*)grid, size.x+1, size.y+1, 1, 0, GEN_METHOD_FLOODFILL, 0.001f);
     return (World){
         .background = sfuTileMap_createFromIndices(atlas, indices, size),
         .navmesh = navmesh,
         .colliders = navMesh_clonePolygons(navmesh),
+        .mesh_to_world = (float)atlas->cellsize.x,
+        .world_to_mesh = 1.f / (float)atlas->cellsize.x,
+        .gridsize = (sfVector2f){ (float)size.x+1.f, (float)size.y+1.f },
     };
 }
 
@@ -26,8 +30,8 @@ void World_free(const World* self) {
 
 static bool* grid_createFromTilemap(const sfVector2u* indices, sfVector2u size) {
     const static uint8_t grid_LUT[] = {
-        0b0100, 0b1100, 0b1000, 0b1011, 0b1110, /* unused */ 0b0000, 0b0000, 0b0000,
-        0b0110, 0b1111, 0b1001, 0b1101, 0b0111, /* unused */ 0b0000, 0b0000, 0b0000,
+        0b0100, 0b1100, 0b1000, 0b1011, 0b0111, /* unused */ 0b0000, 0b0000, 0b0000,
+        0b0110, 0b1111, 0b1001, 0b1101, 0b1110, /* unused */ 0b0000, 0b0000, 0b0000,
         0b0010, 0b0011, 0b0001, /* unused */ 0b0000, 0b0000, 0b0000, 0b0000, 0b0000,
         /* unused */ 0b0000, 0b0000, 0b0000, 0b0000, 0b0000, 0b0000, 0b0000, 0b0000,
         /* unused */ 0b0000, 0b0000, 0b0000, 0b0000, 0b0000, 0b0000, 0b0000, 0b0000,
@@ -36,7 +40,7 @@ static bool* grid_createFromTilemap(const sfVector2u* indices, sfVector2u size) 
         /* unused */ 0b0000, 0b0000, 0b0000, 0b0000, 0b0000, 0b0000, 0b0000, 0b0000,
     };
  
-    bool* result = (bool*)calloc(sizeof(bool), (size.x+1) * (size.y+1));
+    bool* result = (bool*)calloc((size.x+1) * (size.y+1), sizeof(bool));
 
     for (uint32_t y = 0; y < size.y; y++) {
         for (uint32_t x = 0; x < size.x; x++) {

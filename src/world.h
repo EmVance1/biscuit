@@ -8,6 +8,9 @@ typedef struct World {
     sfuTileMap* background;
     navMesh* navmesh;
     navPolygonArray* colliders;
+    float mesh_to_world;
+    float world_to_mesh;
+    sfVector2f gridsize;
 } World;
 
 

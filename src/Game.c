@@ -1,5 +1,5 @@
 #include <SFML/Graphics.h>
-#include <navmesh/c/mesh.h>
+#include <navmesh/c/lib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -28,8 +28,9 @@ static const World* world;
 #define UNIMPLEMENTED() do { fprintf(stderr, "function at '%s' line %d not implemented", __FILE__, __LINE__); exit(1); } while (0)
 
 
+static void spawnEnemy(void);
 static float lerp(float a, float b, float t);
-static void processKeyClicked();
+static void processKeyClicked(void);
 static void animateSword(sfRenderWindow* window);
 static void deceleratePlayer(void);
 static void attackMelee(void);
@@ -44,12 +45,14 @@ void Game_Init(const World* _world) {
     memset(entities, 0, ENTITY_MAX);
     entity_count = 3;
     entities[PLAYER_INDEX] = Entity_createPlayer((sfVector2f){ 4*16, 4*16 });
-    entities[0] = Entity_createEnemy((sfVector2f){ 6*16, 3*16 }, (sfColor){ 255, 165, 0, 255 }, world->navmesh);
-    entities[1] = Entity_createEnemy((sfVector2f){ 4*16, 7*16 }, (sfColor){ 255, 165, 0, 255 }, world->navmesh);
+    // entities[0] = Entity_createEnemy((sfVector2f){ 6*16, 3*16 }, (sfColor){ 255, 165, 0, 255 }, world->navmesh);
+    // entities[1] = Entity_createEnemy((sfVector2f){ 4*16, 7*16 }, (sfColor){ 255, 165, 0, 255 }, world->navmesh);
+    spawnEnemy();
+    spawnEnemy();
     player = &entities[PLAYER_INDEX];
 }
 
-void Game_Update() {
+void Game_Update(void) {
     processKeyClicked();
     Collision_HandlePlayerNavmesh(player, world->colliders);
     Entity_move(player);
@@ -68,6 +71,22 @@ void Game_Render(sfRenderWindow* window) {
 /*
 Static functions
 */
+
+static void spawnEnemy(void) {
+    if (entity_count == ENTITY_MAX) return;
+
+    for (int i = 0; i < PLAYER_INDEX; i++) {
+        if (!entities[i].is_alive) {
+            navVector2f pos = (navVector2f){ (float)(rand() % (int)world->gridsize.x), (float)(rand() % (int)world->gridsize.y) };
+            while (navMesh_getTriangleIndex(world->navmesh, pos, 0.1f) == SIZE_MAX) {
+                pos = (navVector2f){ (float)(rand() % (int)world->gridsize.x), (float)(rand() % (int)world->gridsize.y) };
+            }
+            entities[i] = Entity_createEnemy((sfVector2f){ pos.x * world->mesh_to_world, pos.y * world->mesh_to_world }, (sfColor){ 255, 165, 0, 255 }, world->navmesh);
+            entity_count++;
+            return;
+        }
+    }
+}
 
 static float lerp(float a, float b, float t) {
     return a+(b-a)*t;
@@ -128,6 +147,9 @@ static void attackMelee(void) {
             const float range = player->meleeRange + (entities[i].rectBound.width/2.0f);
             if (sfVec2f_lenSquared(ab) <= range * range) {
                 Entity_damage(&entities[i], player->meleeDamage);
+                if (!entities[i].is_alive) {
+                    entity_count--;
+                }
             }
         }
     }
