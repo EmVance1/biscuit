@@ -8,7 +8,9 @@
 #include "Game.h"
 #include "Entity.h"
 #include "PlayerCollision.h"
+#include "SFML/System/Vector2.h"
 #include "clock.h"
+#include "navmesh/c/shapes.h"
 #include "world.h"
 
 
@@ -22,6 +24,12 @@
 static Entity entities[ENTITY_MAX];
 static Entity* player;
 static size_t entity_count;
+
+#define PROJECTILE_MAX 32
+// new projectiles are added to the first free index
+// projectile being freed frees the index
+// adding a new projectile with PROJECTILE_MAX active projectiles is "undefined"
+static Projectile projectiles[PROJECTILE_MAX];
 
 static const World* world;
 
@@ -37,6 +45,7 @@ static void attackMelee(void);
 static void stunArea(void);
 static void castFireball(void);
 static void caseHazardCloud(void);
+static void updateProjectiles(void);
 
 
 void Game_Init(const World* _world) {
@@ -50,12 +59,22 @@ void Game_Init(const World* _world) {
     spawnEnemy();
     spawnEnemy();
     player = &entities[PLAYER_INDEX];
+
+    for (int i=0; i<PROJECTILE_MAX; i++) {
+        projectiles[i] = Projectile_free();
+    }
+
 }
 
 void Game_Update(void) {
     processKeyClicked();
     Collision_HandlePlayerNavmesh(player, world->colliders);
     Entity_move(player);
+    for (int i=0; i<PROJECTILE_MAX; i++) {
+        if (!projectiles[i].free) {
+            Projectile_move(&projectiles[i]);
+        }
+    }
 }
 
 void Game_Render(sfRenderWindow* window) {
@@ -63,6 +82,11 @@ void Game_Render(sfRenderWindow* window) {
     for (int i = 0; i < ENTITY_MAX; i++) {
         if (entities[i].is_alive) {
             Entity_render(window, &entities[i]);
+        }
+    }
+    for (int i=0; i<PROJECTILE_MAX; i++) {
+        if (!projectiles[i].free) {
+            Projectile_render(window, &projectiles[i]);
         }
     }
 }
@@ -121,6 +145,9 @@ static void processKeyClicked(void) {
     if (sfMouse_isButtonPressed(sfMouseLeft)) {
         attackMelee();
     }
+    if (sfKeyboard_isKeyPressed(sfKeyF)) {
+        castFireball();
+    }
 }
 
 // decelerates player by 2% of current velocity
@@ -177,20 +204,63 @@ static bool entityInRange(Entity* first, Entity* second, float range) {
 }
 
 static void stunArea(void) {
+    if (!Cooldown_ready(&player->stunCooldown)) return;
+
+    Cooldown_reset(&player->stunCooldown);
+
     for (int i = 0; i < PLAYER_INDEX; i++) {
-        if (entities[i].is_alive) {
-            if (entityInRange(player, &entities[i], player->stunRange)) {
-                Cooldown_set(&entities[i].stunEffect, player->stunDuration);
-            }
+        if (entities[i].is_alive && entityInRange(player, &entities[i], player->stunRange)) {
+            Entity_stun(&entities[i],player->stunDuration);
         }
     }
 }
 
 static void castFireball(void) {
-    UNIMPLEMENTED();
+    // should throw fireball in direction of (latest) movement
+    // move fireball position a bit every frame
+    // when within radius of another entity, explode and deal larger radius of damage with falloff
+    if (!Cooldown_ready(&player->fireballCooldown)) return;
+
+    Cooldown_reset(&player->fireballCooldown);
+
+    for (int i=0; i<PROJECTILE_MAX; i++) {
+        if (projectiles[i].free) {
+            sfVector2f position = sfVec2f_add(player->position,sfVec2f_scale(player->lastDir,10));
+            position = sfVec2f_add(position,(sfVector2f) {-player->rectBound.width/2, -player->rectBound.height/2});
+            sfVector2f velocity = sfVec2f_scale(player->lastDir,6.f);
+            projectiles[i] = Projectile_createFireball(position, velocity, 12, 20);
+            break;
+        }
+    }    
 }
 
 static void caseHazardCloud(void) {
     UNIMPLEMENTED();
 }
 
+static void effectProjectile(Projectile* projectile, int projIndex) {
+    switch (projectile->projType) {
+        case FIREBALL: 
+            for (int j=0; j<ENTITY_MAX; j++) {
+                float distSq = sfVec2f_lenSquared(sfVec2f_sub(projectile->position,entities->position));
+                float effectSq = projectile->effectRadius;
+                if (distSq <= effectSq) {
+                    //TODO: Damage
+                }
+            }
+            projectiles[projIndex] = Projectile_free();
+            break;
+        default:
+            break;
+    }
+}
+
+
+static void updateProjectiles(void) {
+    for (int i=0; i<PROJECTILE_MAX; i++) {
+        if (!projectiles[i].free) {
+            if (Collision_ProjectileWallNavmesh(&projectiles[i], world->colliders)) {
+            }
+        }
+    }
+}

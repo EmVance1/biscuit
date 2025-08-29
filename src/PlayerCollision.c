@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "PlayerCollision.h"
 #include "Entity.h"
+#include "SFML/System/Vector2.h"
 
 
 bool Collision_RectLine(sfFloatRect rect, sfVector2f v0, sfVector2f v1) {
@@ -125,6 +126,57 @@ bool Collision_HandlePlayerNavmesh(Entity* player, navPolygonArray* meshPolys) {
         free(collisionVertices);
 
         return true;
+    }
+    return false;
+}
+
+
+float Collision_distanceSqPointLineSeg(sfVector2f p, sfVector2f v0, sfVector2f v1) {
+    sfVector2f v0p = sfVec2f_sub(p,v0);
+    sfVector2f v0v1 = sfVec2f_sub(v1,v0);
+    float dot = sfVec2f_dot(v0p,v0v1);
+    float sqMag = sfVec2f_lenSquared(v0v1);
+    float t = dot/sqMag;
+    float trueT = fmaxf(fminf(t,1),0);
+    sfVector2f st = sfVec2f_add(v0,sfVec2f_scale(v0v1,trueT));
+    return sfVec2f_lenSquared(sfVec2f_sub(st,p));
+}
+
+
+bool Collision_ProjectileWallNavmesh(Projectile* projectile, navPolygonArray* meshPolys) { 
+    float collRadiusSq = projectile->collisionRadius*projectile->collisionRadius;
+    for (int k=0; k<(int) meshPolys->count; k++) {
+        int numVertices = meshPolys->polys[k]->count;
+        int iters = meshPolys->polys[k]->loop ? numVertices : numVertices-1; // In case of loop, have to go one line further than numVertices
+
+        for (int i=0; i<iters; i++) {
+            navVector2f nav0 = meshPolys->polys[k]->points[i];
+            navVector2f nav1 = meshPolys->polys[k]->points[(i+1)%numVertices];
+
+            sfVector2f v0 = (sfVector2f) {nav0.x*16,nav0.y*16};
+            sfVector2f v1 = (sfVector2f) {nav1.x*16,nav1.y*16};
+            if (Collision_distanceSqPointLineSeg(projectile->position, v0, v1) <= collRadiusSq) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
+bool Collision_ProjectileWall(Projectile* projectile, sfVector2f* points, int count, int loop) { 
+    float collRadiusSq = projectile->collisionRadius*projectile->collisionRadius;
+    for (int k=0; k<(int) count; k++) {
+        int numVertices = count;
+        int iters = loop ? numVertices : numVertices-1; // In case of loop, have to go one line further than numVertices
+
+        for (int i=0; i<iters; i++) {
+            sfVector2f v0 = points[i];
+            sfVector2f v1 = points[(i+1)%numVertices];
+            if (Collision_distanceSqPointLineSeg(projectile->position, v0, v1) <= collRadiusSq) {
+                return true;
+            }
+        }
     }
     return false;
 }

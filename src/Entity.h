@@ -1,5 +1,6 @@
 #ifndef ENTITY_H
 #define ENTITY_H
+#include "SFML/System/Vector2.h"
 #include <SFML/Graphics.h>
 #include <stdbool.h>
 
@@ -35,6 +36,8 @@ typedef struct Entity {
     // ability cooldowns
     Cooldown dashCooldown;
     Cooldown attackCooldown;
+    Cooldown stunCooldown;
+    Cooldown fireballCooldown;
     Cooldown attackAnim;
     Cooldown damageAnim;
     Cooldown stunEffect;
@@ -42,6 +45,19 @@ typedef struct Entity {
 
     PathTracker* pathtracker;
 } Entity;
+
+typedef enum ProjectileType {
+    FIREBALL,
+} ProjectileType;
+
+typedef struct Projectile {
+    bool free;
+    ProjectileType projType;
+    float collisionRadius;
+    float effectRadius;
+    sfVector2f position;
+    sfVector2f velocity;
+} Projectile;
 
 
 Entity Entity_createPlayer(sfVector2f position);
@@ -53,10 +69,10 @@ void Entity_move(Entity* entity);
 void Entity_startDash(Entity* entity);
 void Entity_addVelocity(Entity* entity, sfVector2f acceleration);
 void Entity_setVelocity(Entity* entity, sfVector2f velocity);
-// void Entity_updateVelocity(Entity* entity);
 void Entity_damage(Entity* entity, float damage);
 void Entity_kill(Entity* entity);
 void Entity_render(sfRenderWindow* window, Entity* entity);
+void Entity_stun(Entity* entity, float duration);
 
 Cooldown Cooldown_create(float time);
 Cooldown Cooldown_default(void);
@@ -66,5 +82,9 @@ void Cooldown_set(Cooldown* cd, float time);
 float Cooldown_get(const Cooldown* cd);
 bool Cooldown_ready(const Cooldown* cd);
 
+Projectile Projectile_free();
+Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity, float _collisionRadius, float _effectRadius);
+void Projectile_move(Projectile* projectile);
+void Projectile_render(sfRenderWindow* window, Projectile* projectile);
 
 #endif

@@ -12,6 +12,11 @@ sfVector2f Collision_ResolveRectLine(sfFloatRect rect, sfVector2f* v, int lines)
 
 bool Collision_HandlePlayerWall(Entity* player, sfVector2f* vertices, int numVertices);
 
-bool Collision_HandlePlayerNavmesh(Entity* player, navPolygonArray* meshPoly);
+bool Collision_HandlePlayerNavmesh(Entity* player, navPolygonArray* meshPolys);
 
+float Collision_distanceSqPointLineSeg(sfVector2f p, sfVector2f v0, sfVector2f v1);
+
+bool Collision_ProjectileWallNavmesh(Projectile* projectile, navPolygonArray* meshPolys);
+
+bool Collision_ProjectileWall(Projectile* projectile, sfVector2f* points, int count, int loop);
 #endif

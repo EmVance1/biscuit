@@ -1,7 +1,6 @@
 #include "Entity.h"
 #include <math.h>
 #include <stdlib.h>
-#include "SFML/Graphics/Sprite.h"
 #include "clock.h"
 #include "pathtracker.h"
 
@@ -24,6 +23,8 @@ Entity Entity_createPlayer(sfVector2f position) {
         .meleeDamage = 40.f,
         .dashCooldown   = Cooldown_create(0.5f),
         .attackCooldown = Cooldown_create(0.3f),
+        .stunCooldown   = Cooldown_create(2.0f),
+        .fireballCooldown = Cooldown_create(2.0f),
         .attackAnim     = Cooldown_create(0.2f),
         .damageAnim     = Cooldown_create(0.05f),
         .pathtracker = NULL,
@@ -48,6 +49,8 @@ Entity Entity_createEnemy(sfVector2f position, sfColor color, const navMesh* nav
         .meleeDamage = 20.f,
         .dashCooldown   = Cooldown_create(0.5f),
         .attackCooldown = Cooldown_create(1.0f),
+        .stunCooldown   = Cooldown_create(1.0f),
+        .fireballCooldown = Cooldown_create(1.0f),
         .attackAnim     = Cooldown_create(0.2f),
         .damageAnim     = Cooldown_create(0.05f),
         .pathtracker = PathTracker_create(navmesh),
@@ -76,6 +79,8 @@ void Entity_offset(Entity* entity, sfVector2f dir) {
 
 // Accounts for delta time
 void Entity_move(Entity* entity) {
+    if (Cooldown_get(&entity->stunCooldown) > 0) return;
+
     if (Entity_isEnemy(entity)) {
         PathTracker_progress(entity->pathtracker);
     } else {
@@ -130,16 +135,6 @@ void Entity_damage(Entity* entity, float damage) {
 }
 
 
-// confused about this
-/*
-void Entity_updateVelocity(Entity* entity) {
-    // decelerate entity by 10% of current velocity
-    sfVector2f oppositeVel = sfVec2f_scale(entity->velocity, -0.1f);
-    Entity_setVelocity(entity, oppositeVel);
-}
-*/
-
-
 void Entity_render(sfRenderWindow* window, Entity *entity) {
     sfRectangleShape* rect = sfRectangleShape_create();
     sfRectangleShape_setPosition(rect, (sfVector2f){ entity->rectBound.left, entity->rectBound.top });
@@ -154,6 +149,10 @@ void Entity_render(sfRenderWindow* window, Entity *entity) {
     sfRenderWindow_drawRectangleShape(window, rect, NULL);
 }
 
+
+void Entity_stun(Entity* entity, float duration) {
+    Cooldown_set(&entity->stunEffect, duration);
+}
 
 
 Cooldown Cooldown_create(float time) {
@@ -181,3 +180,35 @@ bool Cooldown_ready(const Cooldown* cd) {
     return (Clock_totalTime() - cd->cooldownBegin) >= cd->cooldownLength;
 }
 
+
+
+Projectile Projectile_free() {
+    return (Projectile) {
+        .free = true,
+    };
+}
+
+Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity, float _collisionRadius, float _effectRadius) {
+    return (Projectile) {
+        .free = false,
+        .projType = FIREBALL,
+        .position = _position,
+        .velocity = _velocity,
+        .collisionRadius = _collisionRadius,
+        .effectRadius = _effectRadius,
+    };
+}
+
+void Projectile_move(Projectile* projectile) {
+    const sfVector2f offset = sfVec2f_scale(projectile->velocity, Clock_deltaTime() * 60.f);
+    projectile->position = sfVec2f_add(projectile->position, offset);
+}
+
+
+void Projectile_render(sfRenderWindow* window, Projectile* projectile) {
+    if (projectile->free) return;
+    sfCircleShape* circ = sfCircleShape_create();
+    sfCircleShape_setPosition(circ, projectile->position);
+    sfCircleShape_setRadius(circ, projectile->collisionRadius);
+    sfRenderWindow_drawCircleShape(window, circ, NULL);
+}
