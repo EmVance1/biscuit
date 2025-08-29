@@ -156,7 +156,7 @@ void Entity_render(sfRenderWindow* window, Entity *entity) {
 
 
 Cooldown Cooldown_create(float time) {
-    return (Cooldown){ .cooldownBegin=Clock_totalTime(), .cooldownLength=time };
+    return (Cooldown){ .cooldownBegin=Clock_totalTime() - time, .cooldownLength=time };
 }
 
 Cooldown Cooldown_default() {
