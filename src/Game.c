@@ -184,7 +184,7 @@ static void processKeyClicked(const sfRenderWindow* window, const sfView* camera
 // decelerates player by 2% of current velocity
 static void deceleratePlayer(void) {
     if (sfVec2f_lenSquared(player->velocity) > 0.01f) {
-        Entity_setVelocity(player, sfVec2f_scale(player->velocity, powf(0.75f, Clock_deltaTime() * 60.f)));
+        Entity_setVelocity(player, sfVec2f_scale(player->velocity, powf(0.80f, Clock_deltaTime() * 60.f)));
     } else {
         Entity_setVelocity(player, (sfVector2f){ 0, 0 });
     }
