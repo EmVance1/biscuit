@@ -70,7 +70,11 @@ void Game_Init(const World* _world) {
         projectiles[i].is_alive = false;
     }
 
-    Gui_init(player->fireballCooldown.cooldownLength);
+    Gui_init(
+        player->attackCooldown.cooldownLength,
+        player->dashCooldown.cooldownLength,
+        player->fireballCooldown.cooldownLength
+    );
 }
 
 void Game_Update(const sfRenderWindow* window, sfView* camera) {
@@ -87,11 +91,14 @@ void Game_Update(const sfRenderWindow* window, sfView* camera) {
     const sfVector2f dir = sfVec2f_sub(player->position, center);
     sfView_move(camera, sfVec2f_scale(dir, 0.005f));
 
-    if (Cooldown_ready(&player->fireballCooldown)) {
-        Gui_update(100.f);
-    } else {
-        Gui_update(Cooldown_get(&player->fireballCooldown));
-    }
+    const float hit_cooldown = Cooldown_get(&player->attackCooldown);
+    const float dash_cooldown = Cooldown_get(&player->dashCooldown);
+    const float fb_cooldown = Cooldown_get(&player->fireballCooldown);
+    Gui_update(
+        hit_cooldown > 0.f ? hit_cooldown : INFINITY,
+        dash_cooldown > 0.f ? dash_cooldown : INFINITY,
+        fb_cooldown > 0.f ? fb_cooldown : INFINITY
+    );
 }
 
 void Game_Render(sfRenderWindow* window) {
