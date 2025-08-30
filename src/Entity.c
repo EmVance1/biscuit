@@ -78,11 +78,13 @@ Entity Entity_createEnemy(sfVector2f position, const navMesh* navmesh, float mes
 
 
 static sfTexture* playerTexture;
+static sfTexture* dashTexture;
 static sfTexture* enemyTexture;
 static sfTexture* fireballTexture;
 
 void Entity_loadTextures() {
     playerTexture = sfTexture_createFromFile("res/textures/player.png", NULL);
+    dashTexture = sfTexture_createFromFile("res/textures/dash.png", NULL);
     enemyTexture = sfTexture_createFromFile("res/textures/enemy.png", NULL);
     fireballTexture = sfTexture_createFromFile("res/textures/fireball2.png", NULL);
 }
@@ -186,7 +188,11 @@ void Entity_render(sfRenderWindow* window, Entity *entity) {
         // only enemies do pathfinding
         sfRectangleShape_setTexture(rect, enemyTexture, true);
     } else {
-        sfRectangleShape_setTexture(rect, playerTexture, true);
+        if (sfVec2f_lenSquared(entity->velocity) > entity->speed * entity->speed * 1.1f) {
+            sfRectangleShape_setTexture(rect, dashTexture, true);
+        } else {
+            sfRectangleShape_setTexture(rect, playerTexture, true);
+        }
     }
 
     if (!Cooldown_ready(&entity->damageAnim)) {

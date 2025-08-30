@@ -1,4 +1,5 @@
 #include "gui.h"
+#include "SFML/Graphics/Text.h"
 #include <stdbool.h>
 #include <math.h>
 
@@ -14,6 +15,11 @@ static sfTexture* hit_tex;
 static sfTexture* dash_tex;
 static sfTexture* fireball_tex;
 
+static sfTexture* hit_but;
+static sfTexture* dash_but;
+static sfTexture* fireball_but;
+
+
 void Gui_init(float _hit_max, float _dash_max, float _fireball_max) {
     hit_max = _hit_max;
     dash_max = _dash_max;
@@ -25,6 +31,10 @@ void Gui_init(float _hit_max, float _dash_max, float _fireball_max) {
     hit_tex = sfTexture_createFromFile("res/textures/sword_ui.png", NULL);
     dash_tex = sfTexture_createFromFile("res/textures/dash_ui.png", NULL);
     fireball_tex = sfTexture_createFromFile("res/textures/fire_ui.png", NULL);
+
+    hit_but = sfTexture_createFromFile("res/textures/hit_button.png", NULL);
+    dash_but = sfTexture_createFromFile("res/textures/dash_button.png", NULL);
+    fireball_but = sfTexture_createFromFile("res/textures/fireball_button.png", NULL);
 }
 
 void Gui_update(float _hit_current, float _dash_current, float _fireball_current) {
@@ -74,5 +84,20 @@ void Gui_render(sfRenderWindow* window) {
         sfRectangleShape_setSize(rect, (sfVector2f){ 100, height });
         sfRenderWindow_drawRectangleShape(window, rect, NULL);
     }
+
+    sfRectangleShape_setPosition(rect, (sfVector2f){ 50, 160 });
+    sfRectangleShape_setSize(rect, (sfVector2f){ 100, 100 });
+    sfRectangleShape_setFillColor(rect, (sfColor){ 255, 255, 255, 255 });
+    // sfRectangleShape_setOutlineThickness(rect, 5.f);
+    // sfRectangleShape_setOutlineColor(rect, (sfColor){ 0, 0, 0, 255 });
+    sfRectangleShape_setTexture(rect, hit_but, true);
+    sfRenderWindow_drawRectangleShape(window, rect, NULL);
+    sfRectangleShape_setPosition(rect, (sfVector2f){ 200, 160 });
+    sfRectangleShape_setTexture(rect, dash_but, true);
+    sfRenderWindow_drawRectangleShape(window, rect, NULL);
+    sfRectangleShape_setPosition(rect, (sfVector2f){ 350, 160 });
+    sfRectangleShape_setTexture(rect, fireball_but, true);
+    sfRenderWindow_drawRectangleShape(window, rect, NULL);
+    sfRectangleShape_setOutlineThickness(rect, 0.f);
 }
 
