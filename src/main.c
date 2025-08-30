@@ -63,7 +63,7 @@ int main() {
         Clock_setFrame();
 
         sfEvent event;
-        while (sfWindow_pollEvent((sfWindow*)window, &event)) {
+        while (sfRenderWindow_pollEvent(window, &event)) {
             switch (event.type) {
             case sfEvtClosed:
                 sfRenderWindow_close(window);
@@ -77,7 +77,7 @@ int main() {
             }
         }
 
-        Game_Update(camera);
+        Game_Update(window, camera);
 
         sfRenderWindow_clear(window, (sfColor){ 0, 0, 0, 255 });
         sfRenderWindow_setView(window, camera);

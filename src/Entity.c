@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "SFML/Graphics/CircleShape.h"
 #include "clock.h"
 #include "pathtracker.h"
 
@@ -233,6 +234,7 @@ void Projectile_render(sfRenderWindow* window, Projectile* projectile) {
     sfCircleShape* circ = sfCircleShape_create();
     sfCircleShape_setPosition(circ, projectile->position);
     sfCircleShape_setRadius(circ, projectile->collisionRadius);
+    sfCircleShape_setFillColor(circ, (sfColor){ 255, 100, 0, 255 });
     sfRenderWindow_drawCircleShape(window, circ, NULL);
 }
 

@@ -8,6 +8,7 @@
 #include "Game.h"
 #include "Entity.h"
 #include "PlayerCollision.h"
+#include "SFML/Graphics/RenderWindow.h"
 #include "SFML/System/Vector2.h"
 #include "circle.h"
 #include "clock.h"
@@ -40,12 +41,12 @@ static sfTexture* swordTexture;
 
 static void spawnEnemy(void);
 static float lerp(float a, float b, float t);
-static void processKeyClicked(void);
+static void processKeyClicked(const sfRenderWindow* window, const sfView* camera);
 static void animateSword(sfRenderWindow* window);
 static void deceleratePlayer(void);
 static void attackMelee(void);
 static void stunArea(void);
-static void castFireball(void);
+static void castFireball(const sfRenderWindow* window, const sfView* camera);
 static void caseHazardCloud(void);
 static void updateProjectiles(void);
 
@@ -71,8 +72,8 @@ void Game_Init(const World* _world) {
 
 }
 
-void Game_Update(sfView* camera) {
-    processKeyClicked();
+void Game_Update(const sfRenderWindow* window, sfView* camera) {
+    processKeyClicked(window, camera);
     Collision_HandlePlayerNavmesh(player, world->colliders, world->mesh_to_world);
     Entity_move(player);
     updateProjectiles();
@@ -125,7 +126,7 @@ static float lerp(float a, float b, float t) {
     return a+(b-a)*t;
 }
 
-static void processKeyClicked(void) {
+static void processKeyClicked(const sfRenderWindow* window, const sfView* camera) {
     sfVector2f movement = (sfVector2f){};
     if (sfKeyboard_isKeyPressed(sfKeyW)) {
         movement.y -= 1.f;
@@ -155,7 +156,7 @@ static void processKeyClicked(void) {
         attackMelee();
     }
     if (sfKeyboard_isKeyPressed(sfKeyF)) {
-        castFireball();
+        castFireball(window, camera);
     }
 }
 
@@ -225,7 +226,7 @@ static void stunArea(void) {
     }
 }
 
-static void castFireball(void) {
+static void castFireball(const sfRenderWindow* window, const sfView* camera) {
     // should throw fireball in direction of (latest) movement
     // move fireball position a bit every frame
     // when within radius of another entity, explode and deal larger radius of damage with falloff
@@ -234,10 +235,12 @@ static void castFireball(void) {
     Cooldown_reset(&player->fireballCooldown);
 
     for (int i = 0; i < PROJECTILE_MAX; i++) {
-       if (projectiles[i].free) {
-            sfVector2f position = sfVec2f_add(player->position,sfVec2f_scale(player->lastDir,10));
+        if (projectiles[i].free) {
+            const sfVector2i mouse = sfMouse_getPositionRenderWindow(window);
+            const sfVector2f direction = sfVec2f_norm(sfVec2f_sub(sfRenderWindow_mapPixelToCoords(window, mouse, camera), player->position));
+            sfVector2f position = sfVec2f_add(player->position, sfVec2f_scale(direction, 10));
             position = sfVec2f_add(position, (sfVector2f){ -player->rectBound.width/2, -player->rectBound.height/2 });
-            sfVector2f velocity = sfVec2f_scale(player->lastDir, 6.f);
+            const sfVector2f velocity = sfVec2f_scale(direction, 6.f);
             projectiles[i] = Projectile_createFireball(position, velocity, 12, 40);
             break;
         }
