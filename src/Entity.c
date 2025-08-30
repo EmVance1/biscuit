@@ -22,9 +22,11 @@ Entity Entity_createPlayer(sfVector2f position) {
         .health = 100,
         .meleeRange  = size.x * 2.5f,
         .meleeDamage = 40.f,
+        .abilities = {true,true,true,true,true},
         .dashCooldown   = Cooldown_create(0.5f),
         .attackCooldown = Cooldown_create(0.3f),
         .stunCooldown   = Cooldown_create(2.0f),
+        .hazardCooldown = Cooldown_create(0.5f),
         .fireballCooldown = Cooldown_create(2.0f),
         .attackAnim     = Cooldown_create(0.2f),
         .damageAnim     = Cooldown_create(0.05f),
@@ -48,9 +50,11 @@ Entity Entity_createEnemy(sfVector2f position, const navMesh* navmesh) {
         .health = 100,
         .meleeRange  = 70.f,
         .meleeDamage = 20.f,
+        .abilities = {true,true,true,true,true},
         .dashCooldown   = Cooldown_create(0.5f),
         .attackCooldown = Cooldown_create(1.0f),
         .stunCooldown   = Cooldown_create(1.0f),
+        .hazardCooldown = Cooldown_create(1.0f),
         .fireballCooldown = Cooldown_create(1.0f),
         .attackAnim     = Cooldown_create(0.2f),
         .damageAnim     = Cooldown_create(0.05f),
@@ -219,6 +223,23 @@ Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity,
         .collisionRadius = _collisionRadius,
         .effectRadius = _effectRadius,
         .damage = 50.0f,
+        .fillCol = sfRed,
+        .texture = NULL,
+    };
+}
+
+Projectile Projectile_createHazard(sfVector2f _position, float _effectRadius, float _duration) {
+    return (Projectile) {
+        .free = false,
+        .projType = HAZARD,
+        .position = _position,
+        .velocity = (sfVector2f) {0,0},
+        .collisionRadius = 0,
+        .effectRadius = _effectRadius,
+        .damage = 5.0f,
+        .duration = Cooldown_create(_duration),
+        .fillCol = sfGreen,
+        .texture = NULL,
     };
 }
 
@@ -232,6 +253,15 @@ void Projectile_render(sfRenderWindow* window, Projectile* projectile) {
     if (projectile->free) return;
     sfCircleShape* circ = sfCircleShape_create();
     sfCircleShape_setPosition(circ, projectile->position);
-    sfCircleShape_setRadius(circ, projectile->collisionRadius);
+    if (projectile->collisionRadius == 0) {
+        sfCircleShape_setRadius(circ, projectile->effectRadius);
+    } else {
+        sfCircleShape_setRadius(circ, projectile->collisionRadius);
+    }
+    if (projectile->texture == NULL) {
+        sfCircleShape_setFillColor(circ, projectile->fillCol);
+    } else {
+        sfCircleShape_setTexture(circ, projectile->texture, true);
+    }
     sfRenderWindow_drawCircleShape(window, circ, NULL);
 }

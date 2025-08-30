@@ -167,7 +167,12 @@ bool Collision_ProjectileWallNavmesh(Projectile* projectile, navPolygonArray* me
 
 
 bool Collision_ProjectileWall(Projectile* projectile, sfVector2f* points, int count, int loop) { 
-    float collRadiusSq = projectile->collisionRadius*projectile->collisionRadius;
+    float collRadius = projectile->collisionRadius;
+    if (projectile->collisionRadius == 0) {
+        collRadius = projectile->effectRadius;
+    }
+    float collRadiusSq = collRadius*collRadius;
+    sfVector2f projPositionCorrected = sfVec2f_add(projectile->position,(sfVector2f) {collRadius,collRadius});
     for (int k=0; k<(int) count; k++) {
         int numVertices = count;
         int iters = loop ? numVertices : numVertices-1; // In case of loop, have to go one line further than numVertices
@@ -175,10 +180,20 @@ bool Collision_ProjectileWall(Projectile* projectile, sfVector2f* points, int co
         for (int i=0; i<iters; i++) {
             sfVector2f v0 = points[i];
             sfVector2f v1 = points[(i+1)%numVertices];
-            if (Collision_distanceSqPointLineSeg(projectile->position, v0, v1) <= collRadiusSq) {
+            if (Collision_distanceSqPointLineSeg(projPositionCorrected, v0, v1) <= collRadiusSq) {
                 return true;
             }
         }
     }
     return false;
+}
+
+
+bool Collision_ProjectileRect(Projectile* projectile, sfFloatRect bound) { 
+    sfVector2f v0 = (sfVector2f) {bound.left            , bound.top             };
+    sfVector2f v1 = (sfVector2f) {bound.left            , bound.top+bound.height};
+    sfVector2f v2 = (sfVector2f) {bound.left+bound.width, bound.top             };
+    sfVector2f v3 = (sfVector2f) {bound.left+bound.width, bound.top+bound.height};
+    sfVector2f v[4] = {v0,v1,v2,v3};
+    return Collision_ProjectileWall(projectile,v,4,true);
 }

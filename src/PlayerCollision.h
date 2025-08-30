@@ -19,4 +19,6 @@ float Collision_distanceSqPointLineSeg(sfVector2f p, sfVector2f v0, sfVector2f v
 bool Collision_ProjectileWallNavmesh(Projectile* projectile, navPolygonArray* meshPolys, float worldscale);
 
 bool Collision_ProjectileWall(Projectile* projectile, sfVector2f* points, int count, int loop);
+
+bool Collision_ProjectileRect(Projectile* projectile, sfFloatRect bound);
 #endif

@@ -45,8 +45,9 @@ static void deceleratePlayer(void);
 static void attackMelee(void);
 static void stunArea(void);
 static void castFireball(void);
-static void caseHazardCloud(void);
+static void castHazardCloud(void);
 static void updateProjectiles(void);
+static void effectProjectile(Projectile* projectile);
 
 
 void Game_Init(const World* _world) {
@@ -156,6 +157,9 @@ static void processKeyClicked(void) {
     if (sfKeyboard_isKeyPressed(sfKeyF)) {
         castFireball();
     }
+    if (sfKeyboard_isKeyPressed(sfKeyH)) {
+        castHazardCloud();
+    }
 }
 
 // decelerates player by 2% of current velocity
@@ -168,7 +172,7 @@ static void deceleratePlayer(void) {
 }
 
 static void attackMelee(void) {
-    if (!Cooldown_ready(&player->attackCooldown)) return;
+    if (!Cooldown_ready(&player->attackCooldown) || !player->abilities[A_ATTACK]) return;
 
     // start attack
     Cooldown_reset(&player->attackAnim);
@@ -213,7 +217,7 @@ static bool entityInRange(Entity* first, Entity* second, float range) {
 }
 
 static void stunArea(void) {
-    if (!Cooldown_ready(&player->stunCooldown)) return;
+    if (!Cooldown_ready(&player->stunCooldown) || !player->abilities[A_STUN]) return;
 
     Cooldown_reset(&player->stunCooldown);
 
@@ -228,61 +232,72 @@ static void castFireball(void) {
     // should throw fireball in direction of (latest) movement
     // move fireball position a bit every frame
     // when within radius of another entity, explode and deal larger radius of damage with falloff
-    if (!Cooldown_ready(&player->fireballCooldown)) return;
+    if (!Cooldown_ready(&player->fireballCooldown) || !player->abilities[A_FIREBALL]) return;
 
     Cooldown_reset(&player->fireballCooldown);
 
     for (int i=0; i<PROJECTILE_MAX; i++) {
         if (projectiles[i].free) {
+            float radius = 12;
             sfVector2f position = sfVec2f_add(player->position,sfVec2f_scale(player->lastDir,10));
-            position = sfVec2f_add(position,(sfVector2f) {-player->rectBound.width/2, -player->rectBound.height/2});
+            position = sfVec2f_add(position,(sfVector2f) {-radius, -radius});
             sfVector2f velocity = sfVec2f_scale(player->lastDir,6.f);
-            projectiles[i] = Projectile_createFireball(position, velocity, 12, 40);
+            projectiles[i] = Projectile_createFireball(position, velocity, radius, 40);
             break;
         }
     }    
 }
 
-static void caseHazardCloud(void) {
-    UNIMPLEMENTED();
+static void castHazardCloud(void) {
+    if (!Cooldown_ready(&player->hazardCooldown) || !player->abilities[A_HAZARD]) return;
+
+    Cooldown_reset(&player->hazardCooldown);
+
+    for (int i=0; i<PROJECTILE_MAX; i++) {
+        if (projectiles[i].free) {
+            float radius = 40.0f;
+            sfVector2f position = sfVec2f_add(player->position,sfVec2f_scale(player->lastDir,radius*2));
+            position = sfVec2f_add(position,(sfVector2f) {-radius, -radius});
+            projectiles[i] = Projectile_createHazard(position, radius, 8.f);
+            Cooldown_reset(&projectiles[i].duration);
+            break;
+        }
+    }    
 }
 
-static void effectProjectile(Projectile* projectile, int projIndex) {
-    switch (projectile->projType) {
-        case FIREBALL: 
-            for (int j=0; j<ENTITY_MAX-1; j++) {
-                if(!entities[j].is_alive) continue;
-                float distSq = sfVec2f_lenSquared(sfVec2f_sub(projectile->position,entities[j].position));
-                float effectSq = projectile->effectRadius*projectile->effectRadius;
-                if (distSq <= effectSq) {
-                    Entity_damage(&entities[j],projectile->damage);
-                }
-            }
-            projectiles[projIndex] = Projectile_free();
-            break;
-        default:
-            break;
+static void effectProjectile(Projectile* projectile) {
+    for(int j=0; j<ENTITY_MAX-1; j++) {
+        if (!entities[j].is_alive) continue;
+        if (Collision_ProjectileRect(projectile,entities[j].rectBound)) {
+            Entity_damage(&entities[j],projectile->damage);
+            printf("Damaging\n");
+            return;
+        }
     }
 }
 
 
 static void updateProjectiles(void) {
     for (int i=0; i<PROJECTILE_MAX; i++) {
-        if (!projectiles[i].free) {
+        if (projectiles[i].free) {
+            continue;
+        } else if (projectiles[i].projType == HAZARD) {
+            if (Cooldown_ready(&projectiles[i].duration)) {
+                projectiles[i] = Projectile_free();
+            } else {
+                effectProjectile(&projectiles[i]);
+            }
+        } else {
             if (Collision_ProjectileWallNavmesh(&projectiles[i], world->colliders, world->mesh_to_world)) {
-                effectProjectile(&projectiles[i],i);
+                effectProjectile(&projectiles[i]);
+                projectiles[i] = Projectile_free();
                 return;
             }
-            for(int j=0; j<ENTITY_MAX; j++) {
+            for(int j=0; j<ENTITY_MAX-1; j++) {
                 if (!entities[j].is_alive) continue;
-                sfFloatRect bound = entities[i].rectBound;
-                sfVector2f v0 = (sfVector2f) {bound.left            , bound.top             };
-                sfVector2f v1 = (sfVector2f) {bound.left            , bound.top+bound.height};
-                sfVector2f v2 = (sfVector2f) {bound.left+bound.width, bound.top             };
-                sfVector2f v3 = (sfVector2f) {bound.left+bound.width, bound.top+bound.height};
-                sfVector2f v[4] = {v0,v1,v2,v3};
-                if (Collision_ProjectileWall(&projectiles[i],v,4,true)) {
-                    effectProjectile(&projectiles[i],i);
+                if (Collision_ProjectileRect(&projectiles[i],entities[j].rectBound)) {
+                    effectProjectile(&projectiles[i]);
+                    projectiles[i] = Projectile_free();
                     return;
                 }
             }
