@@ -33,38 +33,30 @@ void Gui_render(sfRenderWindow* window) {
     sfRectangleShape_setSize(rect, (sfVector2f){ 100, 100 });
     sfRectangleShape_setFillColor(rect, (sfColor){ 255, 255, 255, 255 });
     sfRenderWindow_drawRectangleShape(window, rect, NULL);
+    sfRectangleShape_setPosition(rect, (sfVector2f){ 200, 50 });
+    sfRenderWindow_drawRectangleShape(window, rect, NULL);
+    sfRectangleShape_setPosition(rect, (sfVector2f){ 350, 50 });
+    sfRenderWindow_drawRectangleShape(window, rect, NULL);
 
+    sfRectangleShape_setFillColor(rect, (sfColor){ 255, 0, 0, 100 });
     if (hit_current < INFINITY) {
         const float height = 100 * (hit_current / hit_max);
         sfRectangleShape_setPosition(rect, (sfVector2f){ 50, 50 + 100 - height });
         sfRectangleShape_setSize(rect, (sfVector2f){ 100, height });
-        sfRectangleShape_setFillColor(rect, (sfColor){ 255, 0, 0, 100 });
         sfRenderWindow_drawRectangleShape(window, rect, NULL);
     }
-
-    sfRectangleShape_setPosition(rect, (sfVector2f){ 200, 50 });
-    sfRectangleShape_setSize(rect, (sfVector2f){ 100, 100 });
-    sfRectangleShape_setFillColor(rect, (sfColor){ 255, 255, 255, 255 });
-    sfRenderWindow_drawRectangleShape(window, rect, NULL);
 
     if (dash_current < INFINITY) {
         const float height = 100 * (dash_current / dash_max);
         sfRectangleShape_setPosition(rect, (sfVector2f){ 200, 50 + 100 - height });
         sfRectangleShape_setSize(rect, (sfVector2f){ 100, height });
-        sfRectangleShape_setFillColor(rect, (sfColor){ 255, 0, 0, 100 });
         sfRenderWindow_drawRectangleShape(window, rect, NULL);
     }
-
-    sfRectangleShape_setPosition(rect, (sfVector2f){ 350, 50 });
-    sfRectangleShape_setSize(rect, (sfVector2f){ 100, 100 });
-    sfRectangleShape_setFillColor(rect, (sfColor){ 255, 255, 255, 255 });
-    sfRenderWindow_drawRectangleShape(window, rect, NULL);
 
     if (fireball_current < INFINITY) {
         const float height = 100 * (fireball_current / fireball_max);
         sfRectangleShape_setPosition(rect, (sfVector2f){ 350, 50 + 100 - height });
         sfRectangleShape_setSize(rect, (sfVector2f){ 100, height });
-        sfRectangleShape_setFillColor(rect, (sfColor){ 255, 0, 0, 100 });
         sfRenderWindow_drawRectangleShape(window, rect, NULL);
     }
 }
