@@ -1,6 +1,7 @@
 #include "world.h"
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 
 static bool* grid_createFromTilemap(const sfVector2u* indices, sfVector2u size);
@@ -9,11 +10,24 @@ static bool* grid_createFromTilemap(const sfVector2u* indices, sfVector2u size);
 World World_createFromIndices(const uint32_t* indices, sfVector2u size, const sfuTextureAtlas* atlas) {
     bool* grid = grid_createFromTilemap((sfVector2u*)indices, size);
 
+    /*
+    for (uint32_t y = 0; y < size.y+1; y++) {
+        for (uint32_t x = 0; x < size.x+1; x++) {
+            printf("%d", (int)grid[y * (size.x+1) + x]);
+        }
+        printf("\n");
+    }
+    */
+
+    sfuTileMap* background = sfuTileMap_createFromIndices(atlas, indices, size);
+    sfTransformable_move(background->transform, (sfVector2f){ (float)atlas->cellsize.x * 0.5f, (float)atlas->cellsize.y * 0.5f });
     navMesh* navmesh = navMesh_createFromGrid((uint8_t*)grid, size.x+1, size.y+1, 1, 0, GEN_METHOD_FLOODFILL, 0.001f);
+    navPolygonArray* colliders = navMesh_clonePolygons(navmesh);
+
     return (World){
-        .background = sfuTileMap_createFromIndices(atlas, indices, size),
-        .navmesh = navmesh,
-        .colliders = navMesh_clonePolygons(navmesh),
+        .background = background,
+        .navmesh    = navmesh,
+        .colliders  = colliders,
         .mesh_to_world = (float)atlas->cellsize.x,
         .world_to_mesh = 1.f / (float)atlas->cellsize.x,
         .gridsize = (sfVector2f){ (float)size.x+1.f, (float)size.y+1.f },

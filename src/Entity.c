@@ -1,6 +1,7 @@
 #include "Entity.h"
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "clock.h"
 #include "pathtracker.h"
 
@@ -129,6 +130,7 @@ void Entity_startDash(Entity* entity) {
 void Entity_damage(Entity* entity, float damage) {
     entity->health -= damage;
     Cooldown_reset(&entity->damageAnim);
+    printf("Health: %.1f\n",entity->health);
     if (entity->health <= 0) {
         Entity_kill(entity);
     }
@@ -196,6 +198,7 @@ Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity,
         .velocity = _velocity,
         .collisionRadius = _collisionRadius,
         .effectRadius = _effectRadius,
+        .damage = 50.0f,
     };
 }
 

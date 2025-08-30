@@ -64,8 +64,7 @@ struct navMesh { nav::Mesh impl; };
 navMesh* navMesh_createFromFile(const char* filename, float scale) {
     navMesh* result = (navMesh*)malloc(sizeof(navMesh));
     if (!result) { return NULL; }
-    new(&result->impl) nav::Mesh();
-    result->impl = nav::Mesh::read_file(filename, scale);
+    new(&result->impl) nav::Mesh(nav::Mesh::read_file(filename, scale));
     return result;
 }
 
@@ -107,12 +106,14 @@ navPolygonArray* navMesh_clonePolygons(const navMesh* self) {
     result->count = self->impl.polygons.size();
     for (size_t i = 0; i < result->count; i++) {
         navVertexChain* chain = (navVertexChain*)malloc(sizeof(navVertexChain) + self->impl.polygons[i].size() * sizeof(navVector2f*));
+        if (!result) { return NULL; }
         chain->loop = true;
         chain->count = self->impl.polygons[i].size();
         for (size_t j = 0; j < chain->count; j++) {
-            chain->points[j].x = (float)self->impl.polygons[i][j].x;
-            chain->points[j].y = (float)self->impl.polygons[i][j].y;
+            chain->points[chain->count - 1 - j].x = (float)self->impl.polygons[i][j].x * 0.1f;
+            chain->points[chain->count - 1 - j].y = (float)self->impl.polygons[i][j].y * 0.1f;
         }
+        result->polys[i] = chain;
     }
     return result;
 }
@@ -136,8 +137,7 @@ navMesh* navMesh_createFromGrid(
 {
     navMesh* result = (navMesh*)malloc(sizeof(navMesh));
     if (!result) { return NULL; }
-    new(&result->impl) nav::Mesh();
-    result->impl = nav::generate_delauney(grid, width, height, stride, index, (nav::Method)method, epsilon);
+    new(&result->impl) nav::Mesh(nav::generate_delauney(grid, width, height, stride, index, (nav::Method)method, epsilon));
     return result;
 }
 

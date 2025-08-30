@@ -57,6 +57,7 @@ typedef struct Projectile {
     float effectRadius;
     sfVector2f position;
     sfVector2f velocity;
+    float damage;
 } Projectile;
 
 

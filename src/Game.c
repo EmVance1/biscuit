@@ -66,15 +66,19 @@ void Game_Init(const World* _world) {
 
 }
 
-void Game_Update(void) {
+void Game_Update(sfView* camera) {
     processKeyClicked();
-    Collision_HandlePlayerNavmesh(player, world->colliders);
+    Collision_HandlePlayerNavmesh(player, world->colliders, world->mesh_to_world);
     Entity_move(player);
+    updateProjectiles();
     for (int i=0; i<PROJECTILE_MAX; i++) {
         if (!projectiles[i].free) {
             Projectile_move(&projectiles[i]);
         }
     }
+    const sfVector2f center = sfView_getCenter(camera);
+    const sfVector2f dir = sfVec2f_sub(player->position, center);
+    sfView_move(camera, sfVec2f_scale(dir, 0.005f));
 }
 
 void Game_Render(sfRenderWindow* window) {
@@ -228,7 +232,7 @@ static void castFireball(void) {
             sfVector2f position = sfVec2f_add(player->position,sfVec2f_scale(player->lastDir,10));
             position = sfVec2f_add(position,(sfVector2f) {-player->rectBound.width/2, -player->rectBound.height/2});
             sfVector2f velocity = sfVec2f_scale(player->lastDir,6.f);
-            projectiles[i] = Projectile_createFireball(position, velocity, 12, 20);
+            projectiles[i] = Projectile_createFireball(position, velocity, 12, 40);
             break;
         }
     }    
@@ -241,11 +245,12 @@ static void caseHazardCloud(void) {
 static void effectProjectile(Projectile* projectile, int projIndex) {
     switch (projectile->projType) {
         case FIREBALL: 
-            for (int j=0; j<ENTITY_MAX; j++) {
-                float distSq = sfVec2f_lenSquared(sfVec2f_sub(projectile->position,entities->position));
-                float effectSq = projectile->effectRadius;
+            for (int j=0; j<ENTITY_MAX-1; j++) {
+                if(!entities[j].is_alive) continue;
+                float distSq = sfVec2f_lenSquared(sfVec2f_sub(projectile->position,entities[j].position));
+                float effectSq = projectile->effectRadius*projectile->effectRadius;
                 if (distSq <= effectSq) {
-                    //TODO: Damage
+                    Entity_damage(&entities[j],projectile->damage);
                 }
             }
             projectiles[projIndex] = Projectile_free();
@@ -259,7 +264,22 @@ static void effectProjectile(Projectile* projectile, int projIndex) {
 static void updateProjectiles(void) {
     for (int i=0; i<PROJECTILE_MAX; i++) {
         if (!projectiles[i].free) {
-            if (Collision_ProjectileWallNavmesh(&projectiles[i], world->colliders)) {
+            if (Collision_ProjectileWallNavmesh(&projectiles[i], world->colliders, world->mesh_to_world)) {
+                effectProjectile(&projectiles[i],i);
+                return;
+            }
+            for(int j=0; j<ENTITY_MAX; j++) {
+                if (!entities[j].is_alive) continue;
+                sfFloatRect bound = entities[i].rectBound;
+                sfVector2f v0 = (sfVector2f) {bound.left            , bound.top             };
+                sfVector2f v1 = (sfVector2f) {bound.left            , bound.top+bound.height};
+                sfVector2f v2 = (sfVector2f) {bound.left+bound.width, bound.top             };
+                sfVector2f v3 = (sfVector2f) {bound.left+bound.width, bound.top+bound.height};
+                sfVector2f v[4] = {v0,v1,v2,v3};
+                if (Collision_ProjectileWall(&projectiles[i],v,4,true)) {
+                    effectProjectile(&projectiles[i],i);
+                    return;
+                }
             }
         }
     }

@@ -16,7 +16,7 @@ typedef struct navVertexChain {
 
 typedef struct navPolygonArray {
     size_t count;
-    const navVertexChain* polys[];
+    navVertexChain* polys[];
 } navPolygonArray;
 
 

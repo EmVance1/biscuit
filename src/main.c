@@ -75,7 +75,7 @@ int main() {
             }
         }
 
-        Game_Update();
+        Game_Update(camera);
 
         sfRenderWindow_clear(window, (sfColor){ 0, 0, 0, 255 });
         sfRenderWindow_setView(window, camera);
