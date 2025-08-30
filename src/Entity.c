@@ -291,7 +291,10 @@ static float lerp(float a, float b, float t) {
 void Projectile_render(sfRenderWindow* window, Projectile* projectile) {
     sfCircleShape* circ = sfCircleShape_create();
     float radius = 0.f;
-    if (Cooldown_ready(&projectile->impactTimer)) {
+    if (fabsf(projectile->collisionRadius) < 0.01f) {
+        radius = projectile->effectRadius;
+        sfCircleShape_setRadius(circ, projectile->effectRadius);
+    } else if (Cooldown_ready(&projectile->impactTimer)) {
         radius = projectile->collisionRadius;
         sfCircleShape_setRadius(circ, radius);
     } else {
@@ -301,11 +304,6 @@ void Projectile_render(sfRenderWindow* window, Projectile* projectile) {
     }
     sfCircleShape_setOrigin(circ, (sfVector2f){ radius, radius });
     sfCircleShape_setPosition(circ, projectile->position);
-    if (projectile->collisionRadius == 0) {
-        sfCircleShape_setRadius(circ, projectile->effectRadius);
-    } else {
-        sfCircleShape_setRadius(circ, projectile->collisionRadius);
-    }
     if (projectile->texture == NULL) {
         sfCircleShape_setFillColor(circ, projectile->fillCol);
     } else {

@@ -74,7 +74,8 @@ void Game_Init(const World* _world) {
     Gui_init(
         player->attackCooldown.cooldownLength,
         player->dashCooldown.cooldownLength,
-        player->fireballCooldown.cooldownLength
+        player->fireballCooldown.cooldownLength,
+        player->hazardCooldown.cooldownLength
     );
 }
 
@@ -99,10 +100,12 @@ void Game_Update(const sfRenderWindow* window, sfView* camera) {
     const float hit_cooldown = Cooldown_get(&player->attackCooldown);
     const float dash_cooldown = Cooldown_get(&player->dashCooldown);
     const float fb_cooldown = Cooldown_get(&player->fireballCooldown);
+    const float hz_cooldown = Cooldown_get(&player->hazardCooldown);
     Gui_update(
         hit_cooldown > 0.f ? hit_cooldown : INFINITY,
         dash_cooldown > 0.f ? dash_cooldown : INFINITY,
-        fb_cooldown > 0.f ? fb_cooldown : INFINITY
+        fb_cooldown > 0.f ? fb_cooldown : INFINITY,
+        hz_cooldown > 0.f ? hz_cooldown : INFINITY
     );
 }
 
@@ -286,19 +289,19 @@ static void castHazardCloud(const sfRenderWindow* window, const sfView* camera) 
         projectiles[i] = Projectile_createHazard(positionCorr, radius, 8.f);
         Cooldown_reset(&projectiles[i].duration);
         break;
-    }    
+    }
 }
 
 static void effectProjectile(Projectile* projectile) {
     sfuCircle circle = (sfuCircle){ projectile->position, projectile->collisionRadius };
-    if (projectile->collisionRadius == 0) {
+    if (fabsf(projectile->collisionRadius) < 0.01f) {
         circle = (sfuCircle){ projectile->position, projectile->effectRadius };
-    } 
-    for(int j=0; j<ENTITY_MAX-1; j++) {
+    }
+    for(int j = 0; j < PLAYER_INDEX - 1; j++) {
         if (!entities[j].is_alive) continue;
         const sfFloatRect bound = entities[j].rectBound;
         if (sfuCircle_intersectsRect(circle, bound)) {
-            Entity_damage(&entities[j],projectile->damage);
+            Entity_damage(&entities[j], projectile->damage);
             return;
         }
     }
@@ -306,7 +309,7 @@ static void effectProjectile(Projectile* projectile) {
 
 
 static void updateProjectiles(void) {
-    for (int i=0; i<PROJECTILE_MAX; i++) {
+    for (int i = 0; i < PROJECTILE_MAX; i++) {
         if (projectiles[i].is_dying) {
             if (Cooldown_ready(&projectiles[i].impactTimer)) {
                 Projectile_kill(&projectiles[i]);
@@ -323,7 +326,7 @@ static void updateProjectiles(void) {
                 }
             } else if (Collision_ProjectileWallNavmesh(&projectiles[i], world->colliders, world->mesh_to_world)) {
                 effectProjectile(&projectiles[i]);
-                Projectile_kill(&projectiles[i]);
+                Projectile_startKill(&projectiles[i]);
                 return;
             }
             const sfuCircle circle = (sfuCircle){ projectiles[i].position, projectiles[i].collisionRadius };
@@ -332,7 +335,7 @@ static void updateProjectiles(void) {
                 const sfFloatRect bound = entities[j].rectBound;
                 if (sfuCircle_intersectsRect(circle, bound)) {
                     effectProjectile(&projectiles[i]);
-                    Projectile_kill(&projectiles[i]);
+                    Projectile_startKill(&projectiles[i]);
                     return;
                 }
             }
