@@ -44,6 +44,7 @@ typedef struct Entity {
     float attackStartAngle;
 
     PathTracker* pathtracker;
+    Cooldown pathCooldown;
 } Entity;
 
 typedef enum ProjectileType {
@@ -64,13 +65,12 @@ typedef struct Projectile {
 
 
 Entity Entity_createPlayer(sfVector2f position);
-Entity Entity_createEnemy(sfVector2f position, const navMesh* navmesh);
+Entity Entity_createEnemy(sfVector2f position, const navMesh* navmesh, float meshtoworld);
 
 void Entity_loadTextures();
 
-bool Entity_isEnemy(const Entity* entity);
 void Entity_offset(Entity* entity, sfVector2f offset);
-void Entity_move(Entity* entity);
+void Entity_move(Entity* entity, Entity* player, float meshtoworld);
 void Entity_startDash(Entity* entity);
 void Entity_addVelocity(Entity* entity, sfVector2f acceleration);
 void Entity_setVelocity(Entity* entity, sfVector2f velocity);

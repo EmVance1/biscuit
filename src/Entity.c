@@ -33,8 +33,19 @@ Entity Entity_createPlayer(sfVector2f position) {
     };
 }
 
-Entity Entity_createEnemy(sfVector2f position, const navMesh* navmesh) {
+Entity Entity_createEnemy(sfVector2f position, const navMesh* navmesh, float meshtoworld) {
+    static float pathPlanStagger = 0.f;
+
     const sfVector2f size = (sfVector2f){ 20, 35 };
+    Cooldown pathCooldown = Cooldown_create(0.2f);
+    pathCooldown.cooldownBegin = pathPlanStagger;
+    pathPlanStagger += 0.02f;
+    if (pathPlanStagger > 0.2f) {
+        pathPlanStagger -= 0.2f;
+    }
+    PathTracker* pathtracker = PathTracker_create(navmesh);
+    PathTracker_setPosition(pathtracker, sfVec2f_scale(position, 1.f / meshtoworld));
+    PathTracker_setSpeed(pathtracker, 0.02f);
 
     return (Entity){
         .is_alive = true,
@@ -55,7 +66,9 @@ Entity Entity_createEnemy(sfVector2f position, const navMesh* navmesh) {
         .fireballCooldown = Cooldown_create(1.0f),
         .attackAnim     = Cooldown_create(0.2f),
         .damageAnim     = Cooldown_create(0.05f),
-        .pathtracker = PathTracker_create(navmesh),
+
+        .pathtracker  = pathtracker,
+        .pathCooldown = pathCooldown
     };
 }
 
@@ -68,10 +81,6 @@ void Entity_loadTextures() {
     playerTexture = sfTexture_createFromFile("res/textures/player.png", NULL);
     enemyTexture = sfTexture_createFromFile("res/textures/enemy.png", NULL);
     fireballTexture = sfTexture_createFromFile("res/textures/fireball2.png", NULL);
-}
-
-bool Entity_isEnemy(const Entity* entity) {
-    return entity->pathtracker != NULL;
 }
 
 void Entity_kill(Entity* entity) {
@@ -90,11 +99,21 @@ void Entity_offset(Entity* entity, sfVector2f dir) {
 
 
 // Accounts for delta time
-void Entity_move(Entity* entity) {
+void Entity_move(Entity* entity, Entity* player, float meshtoworld) {
     if (Cooldown_get(&entity->stunCooldown) > 0) return;
 
-    if (Entity_isEnemy(entity)) {
+    if (entity->pathtracker) {
+        if (Cooldown_ready(&entity->pathCooldown)) {
+            PathTracker_setTargetPosition(entity->pathtracker, sfVec2f_scale(player->position, 1.f / meshtoworld));
+            Cooldown_reset(&entity->pathCooldown);
+        }
         PathTracker_progress(entity->pathtracker);
+        entity->position = sfVec2f_scale(PathTracker_getPosition(entity->pathtracker), meshtoworld);
+        entity->rectBound.left = entity->position.x;
+        entity->rectBound.top  = entity->position.y;
+        if (sfVec2f_lenSquared(entity->velocity) > 0.01f) {
+            entity->lastDir = sfVec2f_norm(entity->velocity);
+        }
     } else {
         const sfVector2f offset = sfVec2f_scale(entity->velocity, Clock_deltaTime() * 60.f);
         entity->position = sfVec2f_add(entity->position, offset);
@@ -159,7 +178,8 @@ void Entity_render(sfRenderWindow* window, Entity *entity) {
         sfRectangleShape_setPosition(rect, (sfVector2f){ entity->rectBound.left, entity->rectBound.top });
     }
 
-    if (Entity_isEnemy(entity)) {
+    if (entity->pathtracker) {
+        // only enemies do pathfinding
         sfRectangleShape_setTexture(rect, enemyTexture, true);
     } else {
         sfRectangleShape_setTexture(rect, playerTexture, true);

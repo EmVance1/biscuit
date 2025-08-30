@@ -80,9 +80,13 @@ void Game_Init(const World* _world) {
 void Game_Update(const sfRenderWindow* window, sfView* camera) {
     processKeyClicked(window, camera);
     Collision_HandlePlayerNavmesh(player, world->colliders, world->mesh_to_world);
-    Entity_move(player);
+    for (int i = 0; i < ENTITY_MAX; i++) {
+        if (entities[i].is_alive) {
+            Entity_move(&entities[i], player, world->mesh_to_world);
+        }
+    }
     updateProjectiles();
-    for (int i=0; i<PROJECTILE_MAX; i++) {
+    for (int i = 0; i < PROJECTILE_MAX; i++) {
         if (projectiles[i].is_alive && !projectiles[i].is_dying) {
             Projectile_move(&projectiles[i]);
         }
@@ -129,7 +133,7 @@ static void spawnEnemy(void) {
             while (navMesh_getTriangleIndex(world->navmesh, pos, 0.1f) == SIZE_MAX) {
                 pos = (navVector2f){ (float)(rand() % (int)world->gridsize.x), (float)(rand() % (int)world->gridsize.y) };
             }
-            entities[i] = Entity_createEnemy((sfVector2f){ pos.x * world->mesh_to_world, pos.y * world->mesh_to_world }, world->navmesh);
+            entities[i] = Entity_createEnemy((sfVector2f){ pos.x * world->mesh_to_world, pos.y * world->mesh_to_world }, world->navmesh, world->mesh_to_world);
             entity_count++;
             return;
         }
