@@ -235,3 +235,4 @@ void Projectile_render(sfRenderWindow* window, Projectile* projectile) {
     sfCircleShape_setRadius(circ, projectile->collisionRadius);
     sfRenderWindow_drawCircleShape(window, circ, NULL);
 }
+

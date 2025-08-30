@@ -9,6 +9,7 @@
 #include "Entity.h"
 #include "PlayerCollision.h"
 #include "SFML/System/Vector2.h"
+#include "circle.h"
 #include "clock.h"
 #include "navmesh/c/shapes.h"
 #include "world.h"
@@ -64,7 +65,7 @@ void Game_Init(const World* _world) {
     spawnEnemy();
     player = &entities[PLAYER_INDEX];
 
-    for (int i=0; i<PROJECTILE_MAX; i++) {
+    for (int i = 0; i < PROJECTILE_MAX; i++) {
         projectiles[i] = Projectile_free();
     }
 
@@ -202,7 +203,7 @@ static void animateSword(sfRenderWindow* window) {
         sfRectangleShape_setSize(swordRect, (sfVector2f){ player->meleeRange, 20.0f });
         sfRectangleShape_setRotation(swordRect, angle);
         // sfRectangleShape_setFillColor(swordRect, sfMagenta);
-        sfRectangleShape_setTexture(swordRect, swordTexture, false);
+        sfRectangleShape_setTexture(swordRect, swordTexture, true);
 
         sfRenderWindow_drawRectangleShape(window, swordRect, &renderState);
     }
@@ -232,59 +233,67 @@ static void castFireball(void) {
 
     Cooldown_reset(&player->fireballCooldown);
 
-    for (int i=0; i<PROJECTILE_MAX; i++) {
-        if (projectiles[i].free) {
+    for (int i = 0; i < PROJECTILE_MAX; i++) {
+       if (projectiles[i].free) {
             sfVector2f position = sfVec2f_add(player->position,sfVec2f_scale(player->lastDir,10));
-            position = sfVec2f_add(position,(sfVector2f) {-player->rectBound.width/2, -player->rectBound.height/2});
-            sfVector2f velocity = sfVec2f_scale(player->lastDir,6.f);
+            position = sfVec2f_add(position, (sfVector2f){ -player->rectBound.width/2, -player->rectBound.height/2 });
+            sfVector2f velocity = sfVec2f_scale(player->lastDir, 6.f);
             projectiles[i] = Projectile_createFireball(position, velocity, 12, 40);
             break;
         }
-    }    
+    }
 }
 
 static void caseHazardCloud(void) {
     UNIMPLEMENTED();
 }
 
-static void effectProjectile(Projectile* projectile, int projIndex) {
-    switch (projectile->projType) {
-        case FIREBALL: 
-            for (int j=0; j<ENTITY_MAX-1; j++) {
-                if(!entities[j].is_alive) continue;
-                float distSq = sfVec2f_lenSquared(sfVec2f_sub(projectile->position,entities[j].position));
-                float effectSq = projectile->effectRadius*projectile->effectRadius;
-                if (distSq <= effectSq) {
-                    Entity_damage(&entities[j],projectile->damage);
-                }
+static void effectProjectile(Projectile* projectile) {
+    const sfuCircle circle = (sfuCircle){ projectile->position, projectile->effectRadius };
+    for (int j = 0; j < PLAYER_INDEX; j++) {
+        if (!entities[j].is_alive) continue;
+        const sfFloatRect bound = entities[j].rectBound;
+        if (sfuCircle_intersectsRect(circle, bound)) {
+            switch (projectile->projType) {
+                case FIREBALL:
+                    Entity_damage(&entities[j], projectile->damage);
+                    break;
+                default:
+                    break;
             }
-            projectiles[projIndex] = Projectile_free();
-            break;
-        default:
-            break;
+        }
     }
+    *projectile = Projectile_free();
 }
 
 
 static void updateProjectiles(void) {
-    for (int i=0; i<PROJECTILE_MAX; i++) {
+    for (int i = 0; i < PROJECTILE_MAX; i++) {
         if (!projectiles[i].free) {
             if (Collision_ProjectileWallNavmesh(&projectiles[i], world->colliders, world->mesh_to_world)) {
-                effectProjectile(&projectiles[i],i);
+                effectProjectile(&projectiles[i]);
                 return;
             }
-            for(int j=0; j<ENTITY_MAX; j++) {
+            const sfuCircle circle = (sfuCircle){ projectiles[i].position, projectiles[i].collisionRadius };
+            for (int j = 0; j < PLAYER_INDEX; j++) {
                 if (!entities[j].is_alive) continue;
-                sfFloatRect bound = entities[i].rectBound;
-                sfVector2f v0 = (sfVector2f) {bound.left            , bound.top             };
-                sfVector2f v1 = (sfVector2f) {bound.left            , bound.top+bound.height};
-                sfVector2f v2 = (sfVector2f) {bound.left+bound.width, bound.top             };
-                sfVector2f v3 = (sfVector2f) {bound.left+bound.width, bound.top+bound.height};
-                sfVector2f v[4] = {v0,v1,v2,v3};
-                if (Collision_ProjectileWall(&projectiles[i],v,4,true)) {
+                const sfFloatRect bound = entities[j].rectBound;
+                if (sfuCircle_intersectsRect(circle, bound)) {
+                    effectProjectile(&projectiles[i]);
+                }
+
+                /*
+                const sfFloatRect bound = entities[i].rectBound;
+                const sfVector2f v0 = (sfVector2f){ bound.left,             bound.top              };
+                const sfVector2f v1 = (sfVector2f){ bound.left,             bound.top+bound.height };
+                const sfVector2f v2 = (sfVector2f){ bound.left+bound.width, bound.top              };
+                const sfVector2f v3 = (sfVector2f){ bound.left+bound.width, bound.top+bound.height };
+                const sfVector2f v[4] = {v0,v1,v2,v3};
+                if (Collision_ProjectileWall(&projectiles[i], v, 4, true)) {
                     effectProjectile(&projectiles[i],i);
                     return;
                 }
+                */
             }
         }
     }
