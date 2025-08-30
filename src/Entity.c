@@ -62,10 +62,12 @@ Entity Entity_createEnemy(sfVector2f position, const navMesh* navmesh) {
 
 static sfTexture* playerTexture;
 static sfTexture* enemyTexture;
+static sfTexture* fireballTexture;
 
 void Entity_loadTextures() {
     playerTexture = sfTexture_createFromFile("res/textures/player.png", NULL);
     enemyTexture = sfTexture_createFromFile("res/textures/enemy.png", NULL);
+    fireballTexture = sfTexture_createFromFile("res/textures/fireball2.png", NULL);
 }
 
 bool Entity_isEnemy(const Entity* entity) {
@@ -251,7 +253,8 @@ void Projectile_render(sfRenderWindow* window, Projectile* projectile) {
     }
     sfCircleShape_setOrigin(circ, (sfVector2f){ radius, radius });
     sfCircleShape_setPosition(circ, projectile->position);
-    sfCircleShape_setFillColor(circ, (sfColor){ 255, 100, 0, 255 });
+    // sfCircleShape_setFillColor(circ, (sfColor){ 255, 100, 0, 255 });
+    sfCircleShape_setTexture(circ, fireballTexture, false);
     sfRenderWindow_drawCircleShape(window, circ, NULL);
 }
 
