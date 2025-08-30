@@ -62,7 +62,9 @@ typedef struct Projectile {
 
 
 Entity Entity_createPlayer(sfVector2f position);
-Entity Entity_createEnemy(sfVector2f position, sfColor color, const navMesh* navmesh);
+Entity Entity_createEnemy(sfVector2f position, const navMesh* navmesh);
+
+void Entity_loadTextures();
 
 bool Entity_isEnemy(const Entity* entity);
 void Entity_offset(Entity* entity, sfVector2f offset);

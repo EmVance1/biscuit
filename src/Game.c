@@ -32,6 +32,7 @@ static size_t entity_count;
 static Projectile projectiles[PROJECTILE_MAX];
 
 static const World* world;
+static sfTexture* swordTexture;
 
 #define UNIMPLEMENTED() do { fprintf(stderr, "function at '%s' line %d not implemented", __FILE__, __LINE__); exit(1); } while (0)
 
@@ -50,6 +51,9 @@ static void updateProjectiles(void);
 
 void Game_Init(const World* _world) {
     world = _world;
+
+    Entity_loadTextures();
+    swordTexture = sfTexture_createFromFile("res/textures/sword.png", NULL);
 
     memset(entities, 0, ENTITY_MAX);
     entity_count = 3;
@@ -82,7 +86,6 @@ void Game_Update(sfView* camera) {
 }
 
 void Game_Render(sfRenderWindow* window) {
-    animateSword(window);
     for (int i = 0; i < ENTITY_MAX; i++) {
         if (entities[i].is_alive) {
             Entity_render(window, &entities[i]);
@@ -93,6 +96,7 @@ void Game_Render(sfRenderWindow* window) {
             Projectile_render(window, &projectiles[i]);
         }
     }
+    animateSword(window);
 }
 
 
@@ -109,7 +113,7 @@ static void spawnEnemy(void) {
             while (navMesh_getTriangleIndex(world->navmesh, pos, 0.1f) == SIZE_MAX) {
                 pos = (navVector2f){ (float)(rand() % (int)world->gridsize.x), (float)(rand() % (int)world->gridsize.y) };
             }
-            entities[i] = Entity_createEnemy((sfVector2f){ pos.x * world->mesh_to_world, pos.y * world->mesh_to_world }, (sfColor){ 255, 165, 0, 255 }, world->navmesh);
+            entities[i] = Entity_createEnemy((sfVector2f){ pos.x * world->mesh_to_world, pos.y * world->mesh_to_world }, world->navmesh);
             entity_count++;
             return;
         }
@@ -193,11 +197,12 @@ static void animateSword(sfRenderWindow* window) {
         float t = 1 - Cooldown_get(&player->attackAnim) / player->attackAnim.cooldownLength;
         float angle = lerp(player->attackStartAngle-90.0f, player->attackStartAngle+90.0f, t);
         sfRectangleShape* swordRect = sfRectangleShape_create();
-        sfRectangleShape_setOrigin(swordRect, (sfVector2f){ 0.0f, 2.5f });
+        sfRectangleShape_setOrigin(swordRect, (sfVector2f){ 0.0f, 10.f });
         sfRectangleShape_setPosition(swordRect, player->position);
-        sfRectangleShape_setSize(swordRect, (sfVector2f){ player->meleeRange, 10.0f });
+        sfRectangleShape_setSize(swordRect, (sfVector2f){ player->meleeRange, 20.0f });
         sfRectangleShape_setRotation(swordRect, angle);
-        sfRectangleShape_setFillColor(swordRect, sfMagenta);
+        // sfRectangleShape_setFillColor(swordRect, sfMagenta);
+        sfRectangleShape_setTexture(swordRect, swordTexture, false);
 
         sfRenderWindow_drawRectangleShape(window, swordRect, &renderState);
     }
