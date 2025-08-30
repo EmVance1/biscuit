@@ -7,6 +7,7 @@
 #include "clock.h"
 #include "tilemap.h"
 #include "world.h"
+#include "gui.h"
 
 #include <navmesh/c/lib.h>
 #include "pathtracker.h"
@@ -52,6 +53,16 @@ int main() {
         sfView_setViewport(camera, (sfFloatRect){ 0.5f * (1.f - ratio), 0.f, ratio, 1.f });
     }
 
+    sfView* guiview = sfView_createFromRect((sfFloatRect){ 0, 0, 1920, 1080 });
+    const float guiaspectratio = (float)videomode.width / (float)videomode.height;
+    if (guiaspectratio < 16.f / 9.f) {
+        const float ratio = ((float)videomode.width / (16.f / 9.f)) / (float)videomode.height;
+        sfView_setViewport(guiview, (sfFloatRect){ 0.f, 0.5f * (1.f - ratio), 1.f, ratio });
+    } else if (guiaspectratio > 16.f / 9.f) {
+        const float ratio = ((float)videomode.height / (9.f / 16.f)) / (float)videomode.width;
+        sfView_setViewport(guiview, (sfFloatRect){ 0.5f * (1.f - ratio), 0.f, ratio, 1.f });
+    }
+
     sfuTextureAtlas* tileatlas = sfuTextureAtlas_createFromFile("res/textures/tilesheet.png", (sfVector2u){ 8, 8 });
     World sandbox = sandboxMap(tileatlas);
 
@@ -85,6 +96,9 @@ int main() {
         sfRenderWindow_drawTileMap(window, sandbox.background, NULL);
 
         Game_Render(window);
+
+        sfRenderWindow_setView(window, guiview);
+        Gui_render(window);
 
         sfRenderWindow_display(window);
     }

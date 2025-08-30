@@ -12,7 +12,7 @@
 #include "SFML/System/Vector2.h"
 #include "circle.h"
 #include "clock.h"
-#include "navmesh/c/shapes.h"
+#include "gui.h"
 #include "world.h"
 
 
@@ -70,6 +70,7 @@ void Game_Init(const World* _world) {
         projectiles[i].is_alive = false;
     }
 
+    Gui_init(player->fireballCooldown.cooldownLength);
 }
 
 void Game_Update(const sfRenderWindow* window, sfView* camera) {
@@ -85,6 +86,12 @@ void Game_Update(const sfRenderWindow* window, sfView* camera) {
     const sfVector2f center = sfView_getCenter(camera);
     const sfVector2f dir = sfVec2f_sub(player->position, center);
     sfView_move(camera, sfVec2f_scale(dir, 0.005f));
+
+    if (Cooldown_ready(&player->fireballCooldown)) {
+        Gui_update(100.f);
+    } else {
+        Gui_update(Cooldown_get(&player->fireballCooldown));
+    }
 }
 
 void Game_Render(sfRenderWindow* window) {
