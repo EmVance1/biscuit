@@ -79,10 +79,12 @@ int main() {
             case sfEvtClosed:
                 sfRenderWindow_close(window);
                 break;
+#ifdef VANGO_DEBUG
             case sfEvtKeyPressed:
                 if (sfKeyboard_isKeyPressed(sfKeyEscape))
                     sfRenderWindow_close(window);
                 break;
+#endif
             default:
                 break;
             }
@@ -92,11 +94,8 @@ int main() {
 
         sfRenderWindow_clear(window, (sfColor){ 75, 62, 42, 255 });
         sfRenderWindow_setView(window, camera);
-
         sfRenderWindow_drawTileMap(window, sandbox.background, NULL);
-
         Game_Render(window);
-
         sfRenderWindow_setView(window, guiview);
         Gui_render(window);
 
