@@ -187,13 +187,3 @@ bool Collision_ProjectileWall(Projectile* projectile, sfVector2f* points, int co
     }
     return false;
 }
-
-
-bool Collision_ProjectileRect(Projectile* projectile, sfFloatRect bound) { 
-    sfVector2f v0 = (sfVector2f) {bound.left            , bound.top             };
-    sfVector2f v1 = (sfVector2f) {bound.left            , bound.top+bound.height};
-    sfVector2f v2 = (sfVector2f) {bound.left+bound.width, bound.top             };
-    sfVector2f v3 = (sfVector2f) {bound.left+bound.width, bound.top+bound.height};
-    sfVector2f v[4] = {v0,v1,v2,v3};
-    return Collision_ProjectileWall(projectile,v,4,true);
-}

@@ -47,6 +47,7 @@ typedef struct Entity {
     float attackStartAngle;
 
     PathTracker* pathtracker;
+    Cooldown pathCooldown;
 } Entity;
 
 typedef enum ProjectileType {
@@ -55,7 +56,9 @@ typedef enum ProjectileType {
 } ProjectileType;
 
 typedef struct Projectile {
-    bool free;
+    bool is_alive;
+    bool is_dying;
+    Cooldown impactTimer;
     ProjectileType projType;
     float collisionRadius;
     float effectRadius;
@@ -77,13 +80,12 @@ typedef enum Ability {
 } Ability;
 
 Entity Entity_createPlayer(sfVector2f position);
-Entity Entity_createEnemy(sfVector2f position, const navMesh* navmesh);
+Entity Entity_createEnemy(sfVector2f position, const navMesh* navmesh, float meshtoworld);
 
 void Entity_loadTextures();
 
-bool Entity_isEnemy(const Entity* entity);
 void Entity_offset(Entity* entity, sfVector2f offset);
-void Entity_move(Entity* entity);
+void Entity_move(Entity* entity, Entity* player, float meshtoworld);
 void Entity_startDash(Entity* entity);
 void Entity_addVelocity(Entity* entity, sfVector2f acceleration);
 void Entity_setVelocity(Entity* entity, sfVector2f velocity);
@@ -100,7 +102,8 @@ void Cooldown_set(Cooldown* cd, float time);
 float Cooldown_get(const Cooldown* cd);
 bool Cooldown_ready(const Cooldown* cd);
 
-Projectile Projectile_free();
+void Projectile_kill(Projectile* self);
+void Projectile_startKill(Projectile* self);
 void Projectile_move(Projectile* projectile);
 void Projectile_render(sfRenderWindow* window, Projectile* projectile);
 Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity, float _collisionRadius, float _effectRadius);

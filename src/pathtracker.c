@@ -11,7 +11,7 @@ static navVector2f from_sf(sfVector2f v) { return (navVector2f){ v.x, v.y }; }
 
 typedef struct PathTracker {
     const navMesh* mesh;
-    navVertexChain* path;
+    const navVertexChain* path;
     size_t path_index;
     float  path_prog;
     sfVector2f position;
@@ -30,7 +30,7 @@ PathTracker* PathTracker_create(const navMesh* mesh) {
 }
 
 void PathTracker_free(const PathTracker* self) {
-    free(self->path);
+    free((navVertexChain*)self->path);
     free((PathTracker*)self);
 }
 
@@ -48,7 +48,7 @@ bool PathTracker_setPosition(PathTracker* self, sfVector2f position) {
     const size_t idx = navMesh_getTriangleIndex(self->mesh, from_sf(position), 0.05f);
     if (idx == SIZE_MAX) { return false; }
     self->position = position;
-    free(self->path);
+    free((navVertexChain*)self->path);
     self->path = NULL;
     self->path_index = 0;
     self->path_prog = 0.f;
@@ -61,7 +61,7 @@ sfVector2f PathTracker_getPosition(const PathTracker* self) {
 
 
 bool PathTracker_setTargetPosition(PathTracker* self, sfVector2f goal) {
-    free(self->path);
+    free((navVertexChain*)self->path);
     self->path = navMesh_findPath(self->mesh, from_sf(self->position), from_sf(goal));
     if (!self->path) { return false; }
     self->path_index = 0;
@@ -101,7 +101,7 @@ void PathTracker_pause(PathTracker* self) {
 
 void PathTracker_stop (PathTracker* self) {
     self->override_stop = true;
-    free(self->path);
+    free((navVertexChain*)self->path);
     self->path = NULL;
     self->path_index = 0;
     self->path_prog = 0;
