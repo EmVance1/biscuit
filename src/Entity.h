@@ -51,7 +51,9 @@ typedef enum ProjectileType {
 } ProjectileType;
 
 typedef struct Projectile {
-    bool free;
+    bool is_alive;
+    bool is_dying;
+    Cooldown impactTimer;
     ProjectileType projType;
     float collisionRadius;
     float effectRadius;
@@ -85,8 +87,9 @@ void Cooldown_set(Cooldown* cd, float time);
 float Cooldown_get(const Cooldown* cd);
 bool Cooldown_ready(const Cooldown* cd);
 
-Projectile Projectile_free();
 Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity, float _collisionRadius, float _effectRadius);
+void Projectile_kill(Projectile* self);
+void Projectile_startKill(Projectile* self);
 void Projectile_move(Projectile* projectile);
 void Projectile_render(sfRenderWindow* window, Projectile* projectile);
 

@@ -205,15 +205,11 @@ bool Cooldown_ready(const Cooldown* cd) {
 
 
 
-Projectile Projectile_free() {
-    return (Projectile) {
-        .free = true,
-    };
-}
-
 Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity, float _collisionRadius, float _effectRadius) {
     return (Projectile) {
-        .free = false,
+        .is_alive = true,
+        .is_dying = false,
+        .impactTimer = Cooldown_create(0.1f),
         .projType = FIREBALL,
         .position = _position,
         .velocity = _velocity,
@@ -223,17 +219,38 @@ Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity,
     };
 }
 
+void Projectile_kill(Projectile* self) {
+    self->is_alive = false;
+    self->is_dying = false;
+}
+void Projectile_startKill(Projectile* self) {
+    Cooldown_reset(&self->impactTimer);
+    self->is_dying = true;
+}
+
 void Projectile_move(Projectile* projectile) {
     const sfVector2f offset = sfVec2f_scale(projectile->velocity, Clock_deltaTime() * 60.f);
     projectile->position = sfVec2f_add(projectile->position, offset);
 }
 
 
+static float lerp(float a, float b, float t) {
+    return a + (b-a) * t;
+}
+
 void Projectile_render(sfRenderWindow* window, Projectile* projectile) {
-    if (projectile->free) return;
     sfCircleShape* circ = sfCircleShape_create();
+    float radius = 0.f;
+    if (Cooldown_ready(&projectile->impactTimer)) {
+        radius = projectile->collisionRadius;
+        sfCircleShape_setRadius(circ, radius);
+    } else {
+        radius = lerp(projectile->effectRadius, projectile->collisionRadius,
+                Cooldown_get(&projectile->impactTimer) / projectile->impactTimer.cooldownLength);
+        sfCircleShape_setRadius(circ, radius);
+    }
+    sfCircleShape_setOrigin(circ, (sfVector2f){ radius, radius });
     sfCircleShape_setPosition(circ, projectile->position);
-    sfCircleShape_setRadius(circ, projectile->collisionRadius);
     sfCircleShape_setFillColor(circ, (sfColor){ 255, 100, 0, 255 });
     sfRenderWindow_drawCircleShape(window, circ, NULL);
 }

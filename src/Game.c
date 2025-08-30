@@ -47,7 +47,7 @@ static void deceleratePlayer(void);
 static void attackMelee(void);
 static void stunArea(void);
 static void castFireball(const sfRenderWindow* window, const sfView* camera);
-static void caseHazardCloud(void);
+static void castHazardCloud(void);
 static void updateProjectiles(void);
 
 
@@ -67,7 +67,7 @@ void Game_Init(const World* _world) {
     player = &entities[PLAYER_INDEX];
 
     for (int i = 0; i < PROJECTILE_MAX; i++) {
-        projectiles[i] = Projectile_free();
+        projectiles[i].is_alive = false;
     }
 
 }
@@ -78,7 +78,7 @@ void Game_Update(const sfRenderWindow* window, sfView* camera) {
     Entity_move(player);
     updateProjectiles();
     for (int i=0; i<PROJECTILE_MAX; i++) {
-        if (!projectiles[i].free) {
+        if (projectiles[i].is_alive && !projectiles[i].is_dying) {
             Projectile_move(&projectiles[i]);
         }
     }
@@ -93,8 +93,8 @@ void Game_Render(sfRenderWindow* window) {
             Entity_render(window, &entities[i]);
         }
     }
-    for (int i=0; i<PROJECTILE_MAX; i++) {
-        if (!projectiles[i].free) {
+    for (int i = 0; i < PROJECTILE_MAX; i++) {
+        if (projectiles[i].is_alive) {
             Projectile_render(window, &projectiles[i]);
         }
     }
@@ -120,6 +120,9 @@ static void spawnEnemy(void) {
             return;
         }
     }
+}
+
+static void doEnemyAI(void) {
 }
 
 static float lerp(float a, float b, float t) {
@@ -179,14 +182,13 @@ static void attackMelee(void) {
 
     // find enemies in range
     for (int i = 0; i < PLAYER_INDEX; i++) {
-        if (entities[i].is_alive) {
-            const sfVector2f ab = sfVec2f_sub(player->position, entities[i].position);
-            const float range = player->meleeRange + (entities[i].rectBound.width/2.0f);
-            if (sfVec2f_lenSquared(ab) <= range * range) {
-                Entity_damage(&entities[i], player->meleeDamage);
-                if (!entities[i].is_alive) {
-                    entity_count--;
-                }
+        if (!entities[i].is_alive) continue;
+        const sfVector2f ab = sfVec2f_sub(player->position, entities[i].position);
+        const float range = player->meleeRange + (entities[i].rectBound.width/2.0f);
+        if (sfVec2f_lenSquared(ab) <= range * range) {
+            Entity_damage(&entities[i], player->meleeDamage);
+            if (!entities[i].is_alive) {
+                entity_count--;
             }
         }
     }
@@ -235,19 +237,17 @@ static void castFireball(const sfRenderWindow* window, const sfView* camera) {
     Cooldown_reset(&player->fireballCooldown);
 
     for (int i = 0; i < PROJECTILE_MAX; i++) {
-        if (projectiles[i].free) {
-            const sfVector2i mouse = sfMouse_getPositionRenderWindow(window);
-            const sfVector2f direction = sfVec2f_norm(sfVec2f_sub(sfRenderWindow_mapPixelToCoords(window, mouse, camera), player->position));
-            sfVector2f position = sfVec2f_add(player->position, sfVec2f_scale(direction, 10));
-            position = sfVec2f_add(position, (sfVector2f){ -player->rectBound.width/2, -player->rectBound.height/2 });
-            const sfVector2f velocity = sfVec2f_scale(direction, 6.f);
-            projectiles[i] = Projectile_createFireball(position, velocity, 12, 40);
-            break;
-        }
+        if (projectiles[i].is_alive) continue;
+        const sfVector2i mouse = sfMouse_getPositionRenderWindow(window);
+        const sfVector2f direction = sfVec2f_norm(sfVec2f_sub(sfRenderWindow_mapPixelToCoords(window, mouse, camera), player->position));
+        const sfVector2f position = sfVec2f_add(player->position, sfVec2f_scale(direction, 10));
+        const sfVector2f velocity = sfVec2f_scale(direction, 10.f);
+        projectiles[i] = Projectile_createFireball(position, velocity, 12, 40);
+        break;
     }
 }
 
-static void caseHazardCloud(void) {
+static void castHazardCloud(void) {
     UNIMPLEMENTED();
 }
 
@@ -266,13 +266,18 @@ static void effectProjectile(Projectile* projectile) {
             }
         }
     }
-    *projectile = Projectile_free();
+    Projectile_startKill(projectile);
 }
 
 
 static void updateProjectiles(void) {
     for (int i = 0; i < PROJECTILE_MAX; i++) {
-        if (!projectiles[i].free) {
+        if (projectiles[i].is_dying) {
+            if (Cooldown_ready(&projectiles[i].impactTimer)) {
+                Projectile_kill(&projectiles[i]);
+            }
+
+        } else if (projectiles[i].is_alive) {
             if (Collision_ProjectileWallNavmesh(&projectiles[i], world->colliders, world->mesh_to_world)) {
                 effectProjectile(&projectiles[i]);
                 return;
@@ -284,19 +289,6 @@ static void updateProjectiles(void) {
                 if (sfuCircle_intersectsRect(circle, bound)) {
                     effectProjectile(&projectiles[i]);
                 }
-
-                /*
-                const sfFloatRect bound = entities[i].rectBound;
-                const sfVector2f v0 = (sfVector2f){ bound.left,             bound.top              };
-                const sfVector2f v1 = (sfVector2f){ bound.left,             bound.top+bound.height };
-                const sfVector2f v2 = (sfVector2f){ bound.left+bound.width, bound.top              };
-                const sfVector2f v3 = (sfVector2f){ bound.left+bound.width, bound.top+bound.height };
-                const sfVector2f v[4] = {v0,v1,v2,v3};
-                if (Collision_ProjectileWall(&projectiles[i], v, 4, true)) {
-                    effectProjectile(&projectiles[i],i);
-                    return;
-                }
-                */
             }
         }
     }
