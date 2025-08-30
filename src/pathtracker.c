@@ -2,7 +2,7 @@
 #include <navmesh/c/lib.h>
 #include <stdlib.h>
 #include "pathtracker.h"
-#include "clock.h"
+#include "utils/clock.h"
 
 
 static sfVector2f into_sf(navVector2f v) { return (sfVector2f){ v.x, v.y }; }

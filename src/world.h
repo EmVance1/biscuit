@@ -1,7 +1,7 @@
 #ifndef WORLD_H
 #define WORLD_H
-#include "tilemap.h"
 #include <navmesh/c/lib.h>
+#include "utils/tilemap.h"
 
 
 typedef struct World {

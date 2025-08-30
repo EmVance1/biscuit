@@ -1,9 +1,8 @@
 #include "Entity.h"
-#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "SFML/Graphics/CircleShape.h"
-#include "clock.h"
+#include <math.h>
+#include "utils/clock.h"
 #include "pathtracker.h"
 
 

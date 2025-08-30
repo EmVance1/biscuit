@@ -25,15 +25,15 @@ void Gui_init(float attack_max, float dash_max, float fireball_max, float hazard
     current[2] = 0;
     current[3] = 0;
 
-    textures[0] = sfTexture_createFromFile("res/textures/attack_ui.png", NULL);
-    textures[1] = sfTexture_createFromFile("res/textures/dash_ui.png", NULL);
-    textures[2] = sfTexture_createFromFile("res/textures/fireball_ui.png", NULL);
-    // textures[3] = sfTexture_createFromFile("res/textures/hazard_ui.png", NULL);
+    textures[0] = sfTexture_createFromFile("res/textures/gui/attack_ui.png", NULL);
+    textures[1] = sfTexture_createFromFile("res/textures/gui/dash_ui.png", NULL);
+    textures[2] = sfTexture_createFromFile("res/textures/gui/fireball_ui.png", NULL);
+    // textures[3] = sfTexture_createFromFile("res/textures/gui/hazard_ui.png", NULL);
 
-    buttons[0] = sfTexture_createFromFile("res/textures/attack_button.png", NULL);
-    buttons[1] = sfTexture_createFromFile("res/textures/dash_button.png", NULL);
-    buttons[2] = sfTexture_createFromFile("res/textures/fireball_button.png", NULL);
-    buttons[3] = sfTexture_createFromFile("res/textures/hazard_button.png", NULL);
+    buttons[0] = sfTexture_createFromFile("res/textures/gui/attack_button.png", NULL);
+    buttons[1] = sfTexture_createFromFile("res/textures/gui/dash_button.png", NULL);
+    buttons[2] = sfTexture_createFromFile("res/textures/gui/fireball_button.png", NULL);
+    buttons[3] = sfTexture_createFromFile("res/textures/gui/hazard_button.png", NULL);
 }
 
 void Gui_update(float attack_current, float dash_current, float fireball_current, float hazard_current) {

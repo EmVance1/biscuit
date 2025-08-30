@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
+#include "utils/clock.h"
+#include "utils/atlas.h"
+#include "utils/tilemap.h"
 #include "Game.h"
-#include "atlas.h"
-#include "clock.h"
-#include "tilemap.h"
 #include "world.h"
 #include "gui.h"
 

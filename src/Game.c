@@ -8,10 +8,8 @@
 #include "Game.h"
 #include "Entity.h"
 #include "PlayerCollision.h"
-#include "SFML/Graphics/RenderWindow.h"
-#include "SFML/System/Vector2.h"
-#include "circle.h"
-#include "clock.h"
+#include "utils/circle.h"
+#include "utils/clock.h"
 #include "gui.h"
 #include "world.h"
 
@@ -35,6 +33,9 @@ static Projectile projectiles[PROJECTILE_MAX];
 
 static const World* world;
 static sfTexture* swordTexture;
+static Cooldown spawntimer;
+static size_t totalspawned;
+static size_t roomwavesize;
 
 #define UNIMPLEMENTED() do { fprintf(stderr, "function at '%s' line %d not implemented", __FILE__, __LINE__); exit(1); } while (0)
 
@@ -59,13 +60,16 @@ void Game_Init(const World* _world) {
     swordTexture = sfTexture_createFromFile("res/textures/sword.png", NULL);
 
     memset(entities, 0, ENTITY_MAX);
-    entity_count = 3;
     entities[PLAYER_INDEX] = Entity_createPlayer((sfVector2f){ 4*16, 4*16 });
-    // entities[0] = Entity_createEnemy((sfVector2f){ 6*16, 3*16 }, (sfColor){ 255, 165, 0, 255 }, world->navmesh);
-    // entities[1] = Entity_createEnemy((sfVector2f){ 4*16, 7*16 }, (sfColor){ 255, 165, 0, 255 }, world->navmesh);
-    spawnEnemy();
-    spawnEnemy();
+    entity_count = 1;
+    totalspawned = 0;
+    roomwavesize = 64;
     player = &entities[PLAYER_INDEX];
+    for (int i = 0; i < 4; i++) {
+        spawnEnemy();
+        totalspawned++;
+    }
+    spawntimer = Cooldown_create(1.0f);
 
     for (int i = 0; i < PROJECTILE_MAX; i++) {
         projectiles[i].is_alive = false;
@@ -93,6 +97,13 @@ void Game_Update(const sfRenderWindow* window, sfView* camera) {
             Projectile_move(&projectiles[i]);
         }
     }
+
+    if (Cooldown_ready(&spawntimer) && entity_count < ENTITY_MAX && totalspawned < roomwavesize) {
+        spawnEnemy();
+        Cooldown_reset(&spawntimer);
+        totalspawned++;
+    }
+
     const sfVector2f center = sfView_getCenter(camera);
     const sfVector2f dir = sfVec2f_sub(player->position, center);
     sfView_move(camera, sfVec2f_scale(dir, 0.005f));
@@ -293,18 +304,15 @@ static void castHazardCloud(const sfRenderWindow* window, const sfView* camera) 
 }
 
 static void effectProjectile(Projectile* projectile) {
-    sfuCircle circle = (sfuCircle){ projectile->position, projectile->collisionRadius };
-    if (fabsf(projectile->collisionRadius) < 0.01f) {
-        circle = (sfuCircle){ projectile->position, projectile->effectRadius };
-    }
+    sfuCircle circle = (sfuCircle){ projectile->position, projectile->effectRadius };
     for(int j = 0; j < PLAYER_INDEX - 1; j++) {
         if (!entities[j].is_alive) continue;
         const sfFloatRect bound = entities[j].rectBound;
         if (sfuCircle_intersectsRect(circle, bound)) {
             Entity_damage(&entities[j], projectile->damage);
-            return;
         }
     }
+    Projectile_startKill(projectile);
 }
 
 
@@ -335,7 +343,6 @@ static void updateProjectiles(void) {
                 const sfFloatRect bound = entities[j].rectBound;
                 if (sfuCircle_intersectsRect(circle, bound)) {
                     effectProjectile(&projectiles[i]);
-                    Projectile_startKill(&projectiles[i]);
                     return;
                 }
             }
