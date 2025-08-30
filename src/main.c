@@ -90,7 +90,7 @@ int main() {
 
         Game_Update(window, camera);
 
-        sfRenderWindow_clear(window, (sfColor){ 0, 0, 0, 255 });
+        sfRenderWindow_clear(window, (sfColor){ 75, 62, 42, 255 });
         sfRenderWindow_setView(window, camera);
 
         sfRenderWindow_drawTileMap(window, sandbox.background, NULL);
