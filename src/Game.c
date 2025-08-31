@@ -8,6 +8,8 @@
 #include "Game.h"
 #include "Entity.h"
 #include "PlayerCollision.h"
+#include "SFML/Graphics/RectangleShape.h"
+#include "SFML/Graphics/Types.h"
 #include "utils/circle.h"
 #include "utils/clock.h"
 #include "gui.h"
@@ -43,6 +45,8 @@ static Ability abilityChoices[2];
 static int abilitiesRemaining = 4;
 static Ability abilities[5] = {true, true, true, true, true};
 
+static sfTexture* textures[5];
+
 #define UNIMPLEMENTED() do { fprintf(stderr, "function at '%s' line %d not implemented", __FILE__, __LINE__); exit(1); } while (0)
 
 
@@ -69,6 +73,12 @@ void Game_Init(const World* _world) {
 
     Entity_loadTextures();
     swordTexture = sfTexture_createFromFile("res/textures/sword.png", NULL);
+    textures[0] = sfTexture_createFromFile("res/textures/gui/attack_ui.png", NULL);
+    textures[1] = sfTexture_createFromFile("res/textures/gui/dash_ui.png", NULL);
+    textures[2] = sfTexture_createFromFile("res/textures/gui/fireball_ui.png", NULL);
+    textures[3] = NULL;
+    textures[4] = NULL;
+    // textures[3] = sfTexture_createFromFile("res/textures/gui/hazard_ui.png", NULL);
 
     memset(entities, 0, ENTITY_MAX);
     for (int i=0; i<ENTITY_MAX; i++) {
@@ -78,7 +88,7 @@ void Game_Init(const World* _world) {
     entity_count = 1;
     totalspawned = 0;
     roomwavesize = 64;
-    entitiesToKill = 10;
+    entitiesToKill = 30;
     player = &entities[PLAYER_INDEX];
     for (int i = 0; i < 4; i++) {
         spawnEnemy();
@@ -170,26 +180,24 @@ Static functions
 
 static int chooseFirstAbility(void) {
     int first = rand() % abilitiesRemaining;
-    printf("First choice: %d\n", first);
     for (int j=0; j<totalAbilities; j++) {
-        if (!first) {
+        if (first == 0) {
             return j;
         }
         first -= abilities[j] ? 1 : 0;
     }
-    return -1;
+    return 0;
 }
 
 static int chooseSecAbility(void) {
     int second = rand() % (abilitiesRemaining-1);
-    printf("Second choice: %d\n", second);
     for (int j=0; j<totalAbilities; j++) {
-        if (!second) {
+        if (second == 0) {
             return j;
         }
-        second -= abilities[j] || j == (int) abilityChoices[0] ? 1 : 0;
+        second -= abilities[j] || j != (int) abilityChoices[0] ? 1 : 0;
     }
-    return -1;
+    return 0;
 }
 
 static void nextLevel(int chosen) {
@@ -263,6 +271,9 @@ static void processKeyClicked(const sfRenderWindow* window, const sfView* camera
     if (sfKeyboard_isKeyPressed(sfKeyH)) {
         castHazardCloud(window, camera);
     }
+    if (sfKeyboard_isKeyPressed(sfKeyP)) {
+        stunArea();
+    }
 }
 
 // decelerates player by 2% of current velocity
@@ -326,8 +337,18 @@ static void renderDoors(sfRenderWindow* window) {
         sfVector2f size = (sfVector2f) {world->doors[i].width,world->doors[i].height};
         sfRectangleShape_setPosition(rect, position);
         sfRectangleShape_setSize(rect, size);
-        sfRectangleShape_setFillColor(rect, sfColor_fromRGB(100, 180, 30));
+        sfRectangleShape_setFillColor(rect, sfColor_fromRGB(55,32,42));
         sfRenderWindow_drawRectangleShape(window, rect, NULL);
+        position = (sfVector2f) {position.x, position.y+5};
+        sfRectangleShape_setPosition(rect, position);
+        sfRectangleShape_setSize(rect, (sfVector2f) {20,20});
+        if (textures[abilityChoices[i]] == NULL) {
+            sfRectangleShape_setFillColor(rect, sfColor_fromRGBA(0,200,0,255));
+        } else {
+            sfRectangleShape_setTexture(rect, textures[abilityChoices[i]], false);
+        }
+        sfRenderWindow_drawRectangleShape(window, rect, NULL);
+
     }
 }
 
@@ -340,7 +361,7 @@ static void stunArea(void) {
 
     Cooldown_reset(&player->stunCooldown);
 
-    for (int i = 0; i < PLAYER_INDEX; i++) {
+    for (int i = 0; i < ENTITY_MAX-1; i++) {
         if (entities[i].is_alive && entityInRange(player, &entities[i], player->stunRange)) {
             Entity_stun(&entities[i],player->stunDuration);
         }
@@ -409,10 +430,10 @@ static void updateProjectiles(void) {
             if (projectiles[i].projType == HAZARD) {
                 if (Cooldown_ready(&projectiles[i].duration)) {
                     Projectile_kill(&projectiles[i]);
-                    return;
+                    continue;
                 } else {
                     effectProjectile(&projectiles[i]);
-                    return;
+                    continue;
                 }
             } else if (Collision_ProjectileWallNavmesh(&projectiles[i], world->colliders, world->mesh_to_world)) {
                 effectProjectile(&projectiles[i]);
@@ -426,7 +447,7 @@ static void updateProjectiles(void) {
                 if (sfuCircle_intersectsRect(circle, bound)) {
                     effectProjectile(&projectiles[i]);
                     Projectile_startKill(&projectiles[i]);
-                    return;
+                    break;
                 }
             }
         }

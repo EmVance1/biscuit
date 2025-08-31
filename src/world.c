@@ -23,8 +23,8 @@ World World_createFromIndices(const uint32_t* indices, sfVector2u size, const sf
     sfTransformable_move(background->transform, (sfVector2f){ (float)atlas->cellsize.x * 0.5f, (float)atlas->cellsize.y * 0.5f });
     navMesh* navmesh = navMesh_createFromGrid((uint8_t*)grid, size.x+1, size.y+1, 1, 0, GEN_METHOD_FLOODFILL, 0.001f);
     navPolygonArray* colliders = navMesh_clonePolygons(navmesh);
-    sfFloatRect door0 = (sfFloatRect) {size.x*atlas->cellsize.x,size.y/2.f*atlas->cellsize.x-30,15,25};
-    sfFloatRect door1 = (sfFloatRect) {size.x*atlas->cellsize.x,size.y/2.f*atlas->cellsize.x+30,15,25};
+    sfFloatRect door0 = (sfFloatRect) {size.x*atlas->cellsize.x,size.y/2.f*atlas->cellsize.x-30,20,35};
+    sfFloatRect door1 = (sfFloatRect) {size.x*atlas->cellsize.x,size.y/2.f*atlas->cellsize.x+30,20,35};
 
     return (World){
         .background = background,
