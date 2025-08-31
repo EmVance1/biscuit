@@ -24,6 +24,7 @@
 static Entity entities[ENTITY_MAX];
 static Entity* player;
 static size_t entity_count;
+static int entitiesToKill;
 
 #define PROJECTILE_MAX 32
 // new projectiles are added to the first free index
@@ -37,20 +38,30 @@ static Cooldown spawntimer;
 static size_t totalspawned;
 static size_t roomwavesize;
 
+static int totalAbilities = 5;
+static Ability abilityChoices[2];
+static int abilitiesRemaining = 4;
+static Ability abilities[5] = {true, true, true, true, true};
+
 #define UNIMPLEMENTED() do { fprintf(stderr, "function at '%s' line %d not implemented", __FILE__, __LINE__); exit(1); } while (0)
 
 
+static void nextLevel(int chosen);
 static void spawnEnemy(void);
 static float lerp(float a, float b, float t);
 static void processKeyClicked(const sfRenderWindow* window, const sfView* camera);
 static void animateSword(sfRenderWindow* window);
+static void renderDoors(sfRenderWindow* window);
 static void deceleratePlayer(void);
 static void attackMelee(void);
+static void dash(void);
 static void stunArea(void);
 static void castFireball(const sfRenderWindow* window, const sfView* camera);
 static void castHazardCloud(const sfRenderWindow* window, const sfView* camera);
 static void updateProjectiles(void);
 static void effectProjectile(Projectile* projectile);
+static int chooseFirstAbility(void);
+static int chooseSecAbility(void);
 
 
 void Game_Init(const World* _world) {
@@ -60,10 +71,14 @@ void Game_Init(const World* _world) {
     swordTexture = sfTexture_createFromFile("res/textures/sword.png", NULL);
 
     memset(entities, 0, ENTITY_MAX);
+    for (int i=0; i<ENTITY_MAX; i++) {
+        entities[i] = (Entity) {.is_alive = false} ;
+    }
     entities[PLAYER_INDEX] = Entity_createPlayer((sfVector2f){ 4*16, 4*16 });
     entity_count = 1;
     totalspawned = 0;
     roomwavesize = 64;
+    entitiesToKill = 10;
     player = &entities[PLAYER_INDEX];
     for (int i = 0; i < 4; i++) {
         spawnEnemy();
@@ -75,6 +90,9 @@ void Game_Init(const World* _world) {
         projectiles[i].is_alive = false;
     }
 
+    abilityChoices[0] = chooseFirstAbility();
+    abilityChoices[1] = chooseSecAbility();
+
     Gui_init(
         player->attackCooldown.cooldownLength,
         player->dashCooldown.cooldownLength,
@@ -85,12 +103,22 @@ void Game_Init(const World* _world) {
 
 void Game_Update(const sfRenderWindow* window, sfView* camera) {
     processKeyClicked(window, camera);
+
+    for (int i=0; i<2; i++) {
+        if (entitiesToKill > 0) break;
+        if (Collision_PlayerRect(player, world->doors[i])) {
+            player->abilities[abilityChoices[i]] = false;
+            nextLevel(i);
+        }
+    }
+
     Collision_HandlePlayerNavmesh(player, world->colliders, world->mesh_to_world);
     for (int i = 0; i < ENTITY_MAX; i++) {
         if (entities[i].is_alive) {
             Entity_move(&entities[i], player, world->mesh_to_world);
         }
     }
+
     updateProjectiles();
     for (int i = 0; i < PROJECTILE_MAX; i++) {
         if (projectiles[i].is_alive && !projectiles[i].is_dying) {
@@ -132,12 +160,50 @@ void Game_Render(sfRenderWindow* window) {
         }
     }
     animateSword(window);
+    renderDoors(window);
 }
 
 
 /*
 Static functions
 */
+
+static int chooseFirstAbility(void) {
+    int first = rand() % abilitiesRemaining;
+    printf("First choice: %d\n", first);
+    for (int j=0; j<totalAbilities; j++) {
+        if (!first) {
+            return j;
+        }
+        first -= abilities[j] ? 1 : 0;
+    }
+    return -1;
+}
+
+static int chooseSecAbility(void) {
+    int second = rand() % (abilitiesRemaining-1);
+    printf("Second choice: %d\n", second);
+    for (int j=0; j<totalAbilities; j++) {
+        if (!second) {
+            return j;
+        }
+        second -= abilities[j] || j == (int) abilityChoices[0] ? 1 : 0;
+    }
+    return -1;
+}
+
+static void nextLevel(int chosen) {
+    if (abilitiesRemaining < 2) {
+    } else {
+        abilitiesRemaining--;
+        abilities[abilityChoices[chosen]] = false;
+        printf("Chosen Ability: %d\n", abilityChoices[chosen]);
+        Game_Init(world);
+        for (int i=0; i<totalAbilities; i++) {
+            player->abilities[i] = abilities[i];
+        }
+    }
+}
 
 static void spawnEnemy(void) {
     if (entity_count == ENTITY_MAX) return;
@@ -186,7 +252,7 @@ static void processKeyClicked(const sfRenderWindow* window, const sfView* camera
     }
 
     if (sfKeyboard_isKeyPressed(sfKeySpace)) {
-        Entity_startDash(player);
+        dash();
     }
     if (sfMouse_isButtonPressed(sfMouseLeft)) {
         attackMelee();
@@ -224,10 +290,15 @@ static void attackMelee(void) {
         if (sfVec2f_lenSquared(ab) <= range * range) {
             Entity_damage(&entities[i], player->meleeDamage);
             if (!entities[i].is_alive) {
+                entitiesToKill--;
                 entity_count--;
             }
         }
     }
+}
+
+static void dash(void) {
+    Entity_startDash(player);
 }
 
 static void animateSword(sfRenderWindow* window) {
@@ -241,10 +312,22 @@ static void animateSword(sfRenderWindow* window) {
         sfRectangleShape_setPosition(swordRect, player->position);
         sfRectangleShape_setSize(swordRect, (sfVector2f){ player->meleeRange, 20.0f });
         sfRectangleShape_setRotation(swordRect, angle);
-        // sfRectangleShape_setFillColor(swordRect, sfMagenta);
         sfRectangleShape_setTexture(swordRect, swordTexture, true);
 
         sfRenderWindow_drawRectangleShape(window, swordRect, &renderState);
+    }
+}
+
+static void renderDoors(sfRenderWindow* window) {
+    if (entitiesToKill > 0) return;
+    sfRectangleShape* rect = sfRectangleShape_create();
+    for (int i=0; i<2; i++) {
+        sfVector2f position = (sfVector2f) {world->doors[i].left,world->doors[i].top};
+        sfVector2f size = (sfVector2f) {world->doors[i].width,world->doors[i].height};
+        sfRectangleShape_setPosition(rect, position);
+        sfRectangleShape_setSize(rect, size);
+        sfRectangleShape_setFillColor(rect, sfColor_fromRGB(100, 180, 30));
+        sfRenderWindow_drawRectangleShape(window, rect, NULL);
     }
 }
 
@@ -265,9 +348,6 @@ static void stunArea(void) {
 }
 
 static void castFireball(const sfRenderWindow* window, const sfView* camera) {
-    // should throw fireball in direction of (latest) movement
-    // move fireball position a bit every frame
-    // when within radius of another entity, explode and deal larger radius of damage with falloff
     if (!Cooldown_ready(&player->fireballCooldown) || !player->abilities[A_FIREBALL]) return;
 
     Cooldown_reset(&player->fireballCooldown);
@@ -278,9 +358,8 @@ static void castFireball(const sfRenderWindow* window, const sfView* camera) {
         const sfVector2i mouse = sfMouse_getPositionRenderWindow(window);
         const sfVector2f direction = sfVec2f_norm(sfVec2f_sub(sfRenderWindow_mapPixelToCoords(window, mouse, camera), player->position));
         const sfVector2f position = sfVec2f_add(player->position, sfVec2f_scale(direction, 10));
-        const sfVector2f positionCorr = sfVec2f_add(position,(sfVector2f) {-radius, -radius});
         const sfVector2f velocity = sfVec2f_scale(direction, 10.f);
-        projectiles[i] = Projectile_createFireball(positionCorr, velocity, 12, 40);
+        projectiles[i] = Projectile_createFireball(position, velocity);
         break;
     }
 }
@@ -296,8 +375,7 @@ static void castHazardCloud(const sfRenderWindow* window, const sfView* camera) 
         const sfVector2i mouse = sfMouse_getPositionRenderWindow(window);
         const sfVector2f direction = sfVec2f_norm(sfVec2f_sub(sfRenderWindow_mapPixelToCoords(window, mouse, camera), player->position));
         const sfVector2f position = sfVec2f_add(player->position, sfVec2f_scale(direction, 10));
-        const sfVector2f positionCorr = sfVec2f_add(position,(sfVector2f) {-radius, -radius});
-        projectiles[i] = Projectile_createHazard(positionCorr, radius, 8.f);
+        projectiles[i] = Projectile_createHazard(position);
         Cooldown_reset(&projectiles[i].duration);
         break;
     }
@@ -305,14 +383,18 @@ static void castHazardCloud(const sfRenderWindow* window, const sfView* camera) 
 
 static void effectProjectile(Projectile* projectile) {
     sfuCircle circle = (sfuCircle){ projectile->position, projectile->effectRadius };
+    if (!Cooldown_ready(&projectile->dot)) return;
+    Cooldown_reset(&projectile->dot);
     for(int j = 0; j < PLAYER_INDEX - 1; j++) {
         if (!entities[j].is_alive) continue;
         const sfFloatRect bound = entities[j].rectBound;
         if (sfuCircle_intersectsRect(circle, bound)) {
             Entity_damage(&entities[j], projectile->damage);
+            if (!entities[j].is_alive) entitiesToKill--;
         }
     }
-    Projectile_startKill(projectile);
+    // can't start killing the projectile here, because the projectile cloud remains for a while
+    // Projectile_startKill(projectile);
 }
 
 
@@ -343,6 +425,7 @@ static void updateProjectiles(void) {
                 const sfFloatRect bound = entities[j].rectBound;
                 if (sfuCircle_intersectsRect(circle, bound)) {
                     effectProjectile(&projectiles[i]);
+                    Projectile_startKill(&projectiles[i]);
                     return;
                 }
             }

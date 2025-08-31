@@ -133,6 +133,14 @@ bool Collision_HandlePlayerNavmesh(Entity* player, navPolygonArray* meshPolys, f
 }
 
 
+bool Collision_PlayerRect(Entity* player, sfFloatRect rect) {
+    sfFloatRect playerRect = player->rectBound;
+    sfFloatRect intersection;
+    sfFloatRect_intersects(&playerRect, &rect, &intersection);
+    return intersection.height > 0 && intersection.width > 0;
+}
+
+
 float Collision_distanceSqPointLineSeg(sfVector2f p, sfVector2f v0, sfVector2f v1) {
     sfVector2f v0p = sfVec2f_sub(p,v0);
     sfVector2f v0v1 = sfVec2f_sub(v1,v0);

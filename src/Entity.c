@@ -105,7 +105,7 @@ void Entity_offset(Entity* entity, sfVector2f dir) {
 
 // Accounts for delta time
 void Entity_move(Entity* entity, Entity* player, float meshtoworld) {
-    if (Cooldown_get(&entity->stunCooldown) > 0) return;
+    if (Cooldown_get(&entity->stunCooldown) > 0 || !Cooldown_ready(&entity->stunCooldown)) return;
 
     if (entity->pathtracker) {
         if (Cooldown_ready(&entity->pathCooldown)) {
@@ -236,7 +236,7 @@ bool Cooldown_ready(const Cooldown* cd) {
 
 
 
-Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity, float _collisionRadius, float _effectRadius) {
+Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity) {
     return (Projectile) {
         .is_alive = true,
         .is_dying = false,
@@ -244,15 +244,16 @@ Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity,
         .projType = FIREBALL,
         .position = _position,
         .velocity = _velocity,
-        .collisionRadius = _collisionRadius,
-        .effectRadius = _effectRadius,
+        .collisionRadius = 12,
+        .effectRadius = 40,
         .damage = 50.0f,
         .fillCol = sfRed,
         .texture = fireballTexture,
+        .dot = Cooldown_create(0.f),
     };
 }
 
-Projectile Projectile_createHazard(sfVector2f _position, float _effectRadius, float _duration) {
+Projectile Projectile_createHazard(sfVector2f _position) {
     return (Projectile) {
         .is_alive = true,
         .is_dying = false,
@@ -260,11 +261,12 @@ Projectile Projectile_createHazard(sfVector2f _position, float _effectRadius, fl
         .position = _position,
         .velocity = (sfVector2f) {0,0},
         .collisionRadius = 0,
-        .effectRadius = _effectRadius,
+        .effectRadius = 30.f,
         .damage = 5.0f,
-        .duration = Cooldown_create(_duration),
-        .fillCol = sfGreen,
+        .duration = Cooldown_create(8.f),
+        .fillCol = sfColor_fromRGBA(50,255,20,40),
         .texture = NULL,
+        .dot = Cooldown_create(0.3f),
     };
 }
 

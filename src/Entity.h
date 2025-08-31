@@ -106,7 +106,7 @@ void Projectile_kill(Projectile* self);
 void Projectile_startKill(Projectile* self);
 void Projectile_move(Projectile* projectile);
 void Projectile_render(sfRenderWindow* window, Projectile* projectile);
-Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity, float _collisionRadius, float _effectRadius);
-Projectile Projectile_createHazard(sfVector2f _position, float _effectRadius, float _duration);
+Projectile Projectile_createFireball(sfVector2f _position, sfVector2f _velocity);
+Projectile Projectile_createHazard(sfVector2f _position);
 
 #endif

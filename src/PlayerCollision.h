@@ -14,6 +14,8 @@ bool Collision_HandlePlayerWall(Entity* player, sfVector2f* vertices, int numVer
 
 bool Collision_HandlePlayerNavmesh(Entity* player, navPolygonArray* meshPoly, float worldscale);
 
+bool Collision_PlayerRect(Entity* player, sfFloatRect rect);
+
 float Collision_distanceSqPointLineSeg(sfVector2f p, sfVector2f v0, sfVector2f v1);
 
 bool Collision_ProjectileWallNavmesh(Projectile* projectile, navPolygonArray* meshPolys, float worldscale);
