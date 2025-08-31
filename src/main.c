@@ -7,6 +7,7 @@
 #include "utils/tilemap.h"
 #include "Game.h"
 #include "world.h"
+#include "levels.h"
 #include "gui.h"
 
 #include <navmesh/c/lib.h>
@@ -18,23 +19,6 @@
     #define SCREEN_MODE sfFullscreen
 #endif
 
-
-World sandboxMap(const sfuTextureAtlas* atlas) {
-    const static uint32_t map[] = {
-        3, 0,  1, 2,  1, 2,  1, 2,  1, 2,  1, 2,  1, 2,  1, 2,  1, 2,  4, 0,
-        2, 1,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 1,
-        2, 1,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 1,
-        2, 1,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 1,
-        2, 1,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 1,
-        2, 1,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 1,
-        2, 1,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 1,
-        2, 1,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 1,
-        2, 1,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 3,  0, 1,
-        3, 1,  1, 0,  1, 0,  1, 0,  1, 0,  1, 0,  1, 0,  1, 0,  1, 0,  4, 1,
-    };
-
-    return World_createFromIndices(map, (sfVector2u){ 10, 10 }, atlas);
-}
 
 
 int main() {
@@ -63,12 +47,7 @@ int main() {
         sfView_setViewport(guiview, (sfFloatRect){ 0.5f * (1.f - ratio), 0.f, ratio, 1.f });
     }
 
-    sfuTextureAtlas* tileatlas = sfuTextureAtlas_createFromFile("res/textures/tilesheet.png", (sfVector2u){ 8, 8 });
-    World sandbox = sandboxMap(tileatlas);
-
-    PathTracker* tracker = PathTracker_create(sandbox.navmesh);
-
-    Game_Init(&sandbox);
+    Game_Init();
 
     while (sfRenderWindow_isOpen(window)) {
         Clock_setFrame();
@@ -94,7 +73,6 @@ int main() {
 
         sfRenderWindow_clear(window, (sfColor){ 75, 62, 42, 255 });
         sfRenderWindow_setView(window, camera);
-        sfRenderWindow_drawTileMap(window, sandbox.background, NULL);
         Game_Render(window);
         sfRenderWindow_setView(window, guiview);
         Gui_render(window);
@@ -102,12 +80,10 @@ int main() {
         sfRenderWindow_display(window);
     }
 
-    PathTracker_free(tracker);
-
     // Game_Destroy();
 
-    World_free(&sandbox);
-    sfuTextureAtlas_free(tileatlas);
+    // World_free(&sandbox);
+    // sfuTextureAtlas_free(tileatlas);
     sfView_destroy(camera);
     sfRenderWindow_destroy(window);
 }
