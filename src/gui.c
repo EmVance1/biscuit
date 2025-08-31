@@ -28,7 +28,7 @@ void Gui_init(float attack_max, float dash_max, float fireball_max, float hazard
     textures[0] = sfTexture_createFromFile("res/textures/gui/attack_ui.png", NULL);
     textures[1] = sfTexture_createFromFile("res/textures/gui/dash_ui.png", NULL);
     textures[2] = sfTexture_createFromFile("res/textures/gui/fireball_ui.png", NULL);
-    // textures[3] = sfTexture_createFromFile("res/textures/gui/hazard_ui.png", NULL);
+    textures[3] = sfTexture_createFromFile("res/textures/gui/hazard_ui.png", NULL);
 
     buttons[0] = sfTexture_createFromFile("res/textures/gui/attack_button.png", NULL);
     buttons[1] = sfTexture_createFromFile("res/textures/gui/dash_button.png", NULL);
@@ -50,7 +50,7 @@ void Gui_render(sfRenderWindow* window) {
     sfRectangleShape_setFillColor(rect, (sfColor){ 255, 255, 255, 255 });
     sfRectangleShape_setOutlineThickness(rect, 5.f);
     sfRectangleShape_setOutlineColor(rect, (sfColor){ 0, 0, 0, 255 });
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         sfRectangleShape_setPosition(rect, (sfVector2f){ 50 + 150 * (float)i, 50 });
         sfRectangleShape_setTexture(rect, textures[i], true);
         sfRenderWindow_drawRectangleShape(window, rect, NULL);

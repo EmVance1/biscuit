@@ -12,6 +12,7 @@
 #include "utils/clock.h"
 #include "gui.h"
 #include "world.h"
+#include "levels.h"
 
 
 #define PI 3.141592f
@@ -24,7 +25,6 @@
 static Entity entities[ENTITY_MAX];
 static Entity* player;
 static size_t entity_count;
-static int entitiesToKill;
 
 #define PROJECTILE_MAX 32
 // new projectiles are added to the first free index
@@ -32,11 +32,13 @@ static int entitiesToKill;
 // adding a new projectile with PROJECTILE_MAX active projectiles is "undefined"
 static Projectile projectiles[PROJECTILE_MAX];
 
-static const World* world;
+static const sfuTextureAtlas* worldatlas;
+static World world;
 static sfTexture* swordTexture;
 static Cooldown spawntimer;
 static size_t totalspawned;
 static size_t roomwavesize;
+static size_t totalkilled;
 
 static int totalAbilities = 5;
 static Ability abilityChoices[2];
@@ -64,8 +66,10 @@ static int chooseFirstAbility(void);
 static int chooseSecAbility(void);
 
 
-void Game_Init(const World* _world) {
-    world = _world;
+void Game_Init(void) {
+    worldatlas = sfuTextureAtlas_createFromFile("res/textures/tilesheet.png", (sfVector2u){ 8, 8 });
+    world = sandboxMap(worldatlas);
+
 
     Entity_loadTextures();
     swordTexture = sfTexture_createFromFile("res/textures/sword.png", NULL);
@@ -77,14 +81,16 @@ void Game_Init(const World* _world) {
     entities[PLAYER_INDEX] = Entity_createPlayer((sfVector2f){ 4*16, 4*16 });
     entity_count = 1;
     totalspawned = 0;
-    roomwavesize = 64;
-    entitiesToKill = 10;
+    roomwavesize = 5;
+    totalkilled = 0;
     player = &entities[PLAYER_INDEX];
-    for (int i = 0; i < 4; i++) {
-        spawnEnemy();
-        totalspawned++;
+    if (abilitiesRemaining >= 2) {
+        for (int i = 0; i < 4; i++) {
+            spawnEnemy();
+            totalspawned++;
+        }
+        spawntimer = Cooldown_create(1.0f);
     }
-    spawntimer = Cooldown_create(1.0f);
 
     for (int i = 0; i < PROJECTILE_MAX; i++) {
         projectiles[i].is_alive = false;
@@ -104,18 +110,10 @@ void Game_Init(const World* _world) {
 void Game_Update(const sfRenderWindow* window, sfView* camera) {
     processKeyClicked(window, camera);
 
-    for (int i=0; i<2; i++) {
-        if (entitiesToKill > 0) break;
-        if (Collision_PlayerRect(player, world->doors[i])) {
-            player->abilities[abilityChoices[i]] = false;
-            nextLevel(i);
-        }
-    }
-
-    Collision_HandlePlayerNavmesh(player, world->colliders, world->mesh_to_world);
+    Collision_HandlePlayerNavmesh(player, world.colliders, world.mesh_to_world);
     for (int i = 0; i < ENTITY_MAX; i++) {
         if (entities[i].is_alive) {
-            Entity_move(&entities[i], player, world->mesh_to_world);
+            Entity_move(&entities[i], player, world.mesh_to_world);
         }
     }
 
@@ -126,20 +124,30 @@ void Game_Update(const sfRenderWindow* window, sfView* camera) {
         }
     }
 
-    if (Cooldown_ready(&spawntimer) && entity_count < ENTITY_MAX && totalspawned < roomwavesize) {
+    if (Cooldown_ready(&spawntimer) && entity_count < ENTITY_MAX && totalspawned < roomwavesize && abilitiesRemaining >= 2) {
         spawnEnemy();
         Cooldown_reset(&spawntimer);
         totalspawned++;
     }
 
+    if (totalkilled >= roomwavesize) {
+        for (int i=0; i<2; i++) {
+            if (Collision_PlayerRect(player, world.doors[i])) {
+                player->abilities[abilityChoices[i]] = false;
+                nextLevel(i);
+            }
+        }
+    }
+
+
     const sfVector2f center = sfView_getCenter(camera);
     const sfVector2f dir = sfVec2f_sub(player->position, center);
     sfView_move(camera, sfVec2f_scale(dir, 0.005f));
 
-    const float hit_cooldown = Cooldown_get(&player->attackCooldown);
-    const float dash_cooldown = Cooldown_get(&player->dashCooldown);
-    const float fb_cooldown = Cooldown_get(&player->fireballCooldown);
-    const float hz_cooldown = Cooldown_get(&player->hazardCooldown);
+    const float hit_cooldown  = player->abilities[A_ATTACK]   ? Cooldown_get(&player->attackCooldown) : player->attackCooldown.cooldownLength;
+    const float dash_cooldown = player->abilities[A_DASH]     ? Cooldown_get(&player->dashCooldown) : player->dashCooldown.cooldownLength;
+    const float fb_cooldown   = player->abilities[A_FIREBALL] ? Cooldown_get(&player->fireballCooldown) : player->fireballCooldown.cooldownLength;
+    const float hz_cooldown   = player->abilities[A_HAZARD]   ? Cooldown_get(&player->hazardCooldown) : player->hazardCooldown.cooldownLength;
     Gui_update(
         hit_cooldown > 0.f ? hit_cooldown : INFINITY,
         dash_cooldown > 0.f ? dash_cooldown : INFINITY,
@@ -149,6 +157,7 @@ void Game_Update(const sfRenderWindow* window, sfView* camera) {
 }
 
 void Game_Render(sfRenderWindow* window) {
+    sfRenderWindow_drawTileMap(window, world.background, NULL);
     for (int i = 0; i < ENTITY_MAX; i++) {
         if (entities[i].is_alive) {
             Entity_render(window, &entities[i]);
@@ -194,11 +203,14 @@ static int chooseSecAbility(void) {
 
 static void nextLevel(int chosen) {
     if (abilitiesRemaining < 2) {
+        World_free(&world);
+        world = cookieMap(worldatlas);
+        Game_Init();
     } else {
         abilitiesRemaining--;
         abilities[abilityChoices[chosen]] = false;
         printf("Chosen Ability: %d\n", abilityChoices[chosen]);
-        Game_Init(world);
+        Game_Init();
         for (int i=0; i<totalAbilities; i++) {
             player->abilities[i] = abilities[i];
         }
@@ -210,11 +222,11 @@ static void spawnEnemy(void) {
 
     for (int i = 0; i < PLAYER_INDEX; i++) {
         if (!entities[i].is_alive) {
-            navVector2f pos = (navVector2f){ (float)(rand() % (int)world->gridsize.x), (float)(rand() % (int)world->gridsize.y) };
-            while (navMesh_getTriangleIndex(world->navmesh, pos, 0.1f) == SIZE_MAX) {
-                pos = (navVector2f){ (float)(rand() % (int)world->gridsize.x), (float)(rand() % (int)world->gridsize.y) };
+            navVector2f pos = (navVector2f){ (float)(rand() % (int)world.gridsize.x), (float)(rand() % (int)world.gridsize.y) };
+            while (navMesh_getTriangleIndex(world.navmesh, pos, 0.1f) == SIZE_MAX) {
+                pos = (navVector2f){ (float)(rand() % (int)world.gridsize.x), (float)(rand() % (int)world.gridsize.y) };
             }
-            entities[i] = Entity_createEnemy((sfVector2f){ pos.x * world->mesh_to_world, pos.y * world->mesh_to_world }, world->navmesh, world->mesh_to_world);
+            entities[i] = Entity_createEnemy((sfVector2f){ pos.x * world.mesh_to_world, pos.y * world.mesh_to_world }, world.navmesh, world.mesh_to_world);
             entity_count++;
             return;
         }
@@ -290,7 +302,7 @@ static void attackMelee(void) {
         if (sfVec2f_lenSquared(ab) <= range * range) {
             Entity_damage(&entities[i], player->meleeDamage);
             if (!entities[i].is_alive) {
-                entitiesToKill--;
+                totalkilled++;
                 entity_count--;
             }
         }
@@ -319,11 +331,11 @@ static void animateSword(sfRenderWindow* window) {
 }
 
 static void renderDoors(sfRenderWindow* window) {
-    if (entitiesToKill > 0) return;
+    if (totalkilled < roomwavesize) return;
     sfRectangleShape* rect = sfRectangleShape_create();
     for (int i=0; i<2; i++) {
-        sfVector2f position = (sfVector2f) {world->doors[i].left,world->doors[i].top};
-        sfVector2f size = (sfVector2f) {world->doors[i].width,world->doors[i].height};
+        sfVector2f position = (sfVector2f) {world.doors[i].left,world.doors[i].top};
+        sfVector2f size = (sfVector2f) {world.doors[i].width,world.doors[i].height};
         sfRectangleShape_setPosition(rect, position);
         sfRectangleShape_setSize(rect, size);
         sfRectangleShape_setFillColor(rect, sfColor_fromRGB(100, 180, 30));
@@ -390,7 +402,7 @@ static void effectProjectile(Projectile* projectile) {
         const sfFloatRect bound = entities[j].rectBound;
         if (sfuCircle_intersectsRect(circle, bound)) {
             Entity_damage(&entities[j], projectile->damage);
-            if (!entities[j].is_alive) entitiesToKill--;
+            if (!entities[j].is_alive) totalkilled++;
         }
     }
     // can't start killing the projectile here, because the projectile cloud remains for a while
@@ -414,7 +426,7 @@ static void updateProjectiles(void) {
                     effectProjectile(&projectiles[i]);
                     return;
                 }
-            } else if (Collision_ProjectileWallNavmesh(&projectiles[i], world->colliders, world->mesh_to_world)) {
+            } else if (Collision_ProjectileWallNavmesh(&projectiles[i], world.colliders, world.mesh_to_world)) {
                 effectProjectile(&projectiles[i]);
                 Projectile_startKill(&projectiles[i]);
                 return;
